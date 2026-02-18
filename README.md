@@ -1,4 +1,5 @@
-# Talk with DB - Version 3 🚀
+# Talk with DB - Version 3 🚀 (in testing phase)
+
 
 **Advanced Chat with SQL System - Web UI & Enterprise-Grade RAG**
 
