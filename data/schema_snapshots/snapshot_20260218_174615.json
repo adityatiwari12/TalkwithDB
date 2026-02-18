@@ -1,0 +1,390 @@
+{
+  "tables": [
+    {
+      "name": "customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "name",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "email",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "country",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp without time zone",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 2500,
+      "checksum": "79047945834475d0b23b84e355c2a489",
+      "last_updated": "2026-02-18T17:45:57.715910"
+    },
+    {
+      "name": "order_items",
+      "columns": [
+        {
+          "name": "item_id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "order_id",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "orders",
+          "references_column": "order_id"
+        },
+        {
+          "name": "product_id",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "products",
+          "references_column": "product_id"
+        },
+        {
+          "name": "quantity",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "unit_price",
+          "data_type": "numeric",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 30000,
+      "checksum": "4acd18ec38bc33582763117dbcf4abaf",
+      "last_updated": "2026-02-18T17:45:57.894091"
+    },
+    {
+      "name": "orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "customer_id",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "customers",
+          "references_column": "customer_id"
+        },
+        {
+          "name": "order_date",
+          "data_type": "date",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "status",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "total_amount",
+          "data_type": "numeric",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 12000,
+      "checksum": "d43a4759cea59e1ff7aff874de00433c",
+      "last_updated": "2026-02-18T17:45:58.079225"
+    },
+    {
+      "name": "payments",
+      "columns": [
+        {
+          "name": "payment_id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "order_id",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "orders",
+          "references_column": "order_id"
+        },
+        {
+          "name": "payment_date",
+          "data_type": "date",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "amount",
+          "data_type": "numeric",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "method",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 9430,
+      "checksum": "b9971ca03456646e1ffc3ea162e62fa8",
+      "last_updated": "2026-02-18T17:45:58.284825"
+    },
+    {
+      "name": "products",
+      "columns": [
+        {
+          "name": "product_id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "product_name",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "category",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "price",
+          "data_type": "numeric",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "stock_quantity",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 76,
+      "checksum": "70e716e594572b4d511b69197da588df",
+      "last_updated": "2026-02-18T17:45:58.580005"
+    },
+    {
+      "name": "projects",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "name",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "description",
+          "data_type": "text",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp without time zone",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 21,
+      "checksum": "47b710d0bab8f89b2b5982c2a0bdbe91",
+      "last_updated": "2026-02-18T17:45:58.759096"
+    },
+    {
+      "name": "tasks",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "title",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "status",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "assigned_to",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "users",
+          "references_column": "id"
+        },
+        {
+          "name": "project_id",
+          "data_type": "integer",
+          "is_primary_key": false,
+          "is_foreign_key": true,
+          "references_table": "projects",
+          "references_column": "id"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp without time zone",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "due_date",
+          "data_type": "date",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 300,
+      "checksum": "871a9a7868da8e5c5c8a7d5da94989cb",
+      "last_updated": "2026-02-18T17:45:58.938312"
+    },
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "integer",
+          "is_primary_key": true,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "name",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "email",
+          "data_type": "character varying",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp without time zone",
+          "is_primary_key": false,
+          "is_foreign_key": false,
+          "references_table": null,
+          "references_column": null
+        }
+      ],
+      "row_count": 48,
+      "checksum": "a8eaed5c1f615de325587e57c31ef668",
+      "last_updated": "2026-02-18T17:45:59.116443"
+    }
+  ],
+  "checksum": "a65eb40144f61de06bdc819a58263996",
+  "created_at": "2026-02-18T17:45:59.116994"
+}

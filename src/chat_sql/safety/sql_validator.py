@@ -4,8 +4,21 @@ Validates SQL queries to ensure they are read-only and safe.
 """
 
 import re
+import sys
+import os
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+try:
+    from config import config
+except ImportError:
+    # Fallback config
+    class Config:
+        MAX_RESULT_ROWS = 200
+    config = Config()
 
 
 @dataclass
@@ -219,6 +232,9 @@ class SQLValidator:
         Returns:
             Sanitized SQL query
         """
+        # Remove trailing semicolon if present
+        sql_query = sql_query.rstrip().rstrip(';')
+        
         # Add LIMIT clause if not present
         if 'LIMIT' not in sql_query.upper():
             sql_query += f" LIMIT {config.MAX_RESULT_ROWS}"

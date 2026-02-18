@@ -28,11 +28,26 @@ class Config:
     # Embedding Configuration
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", OLLAMA_EMBED_MODEL)
     
-    # Vector Store Configuration
-    VECTOR_STORE_PATH: str = os.getenv("CHROMA_PERSIST_PATH", "./chroma_db")
-    
-    # RAG Configuration
-    TOP_K_RETRIEVAL: int = int(os.getenv("TOP_K_RETRIEVAL", "5"))
+    # Data directory for persistent storage
+    DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
+
+    # Vector store path (persistent)
+    VECTOR_STORE_PATH = os.path.join(DATA_DIR, "schema_vectors")
+
+    # Maximum tables to retrieve per query (optimization for large schemas)
+    TOP_K_RETRIEVAL = 3
+
+    # Maximum result rows for safety
+    MAX_RESULT_ROWS = 200
+
+    # SQL query timeout
+    SQL_TIMEOUT_SECONDS = 30
+
+    # Schema refresh interval (hours)
+    SCHEMA_REFRESH_INTERVAL = 24
+
+    # RAG Configuration (optimized for large schemas)
+    TOP_K_RETRIEVAL: int = int(os.getenv("TOP_K_RETRIEVAL", "3"))  # Reduced from 5 to 3
     
     # Safety Configuration
     MAX_RESULT_ROWS: int = int(os.getenv("MAX_ROWS", "200"))

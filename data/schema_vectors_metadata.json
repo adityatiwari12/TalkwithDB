@@ -1,0 +1,87 @@
+{
+  "table_items": {
+    "customers": {
+      "table_name": "customers",
+      "text": "Table: customers\nDescription: Table with 2500 rows\nColumns:\n- customer_id (integer) [PRIMARY KEY]\n- name (character varying)\n- email (character varying)\n- country (character varying)\n- created_at (timestamp without time zone)\n",
+      "metadata": {
+        "table_name": "customers",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:01.218486"
+      },
+      "checksum": "79047945834475d0b23b84e355c2a489"
+    },
+    "order_items": {
+      "table_name": "order_items",
+      "text": "Table: order_items\nDescription: Table with 30000 rows\nColumns:\n- item_id (integer) [PRIMARY KEY]\n- order_id (integer) [FOREIGN KEY -> orders.order_id]\n- product_id (integer) [FOREIGN KEY -> products.product_id]\n- quantity (integer)\n- unit_price (numeric)\n",
+      "metadata": {
+        "table_name": "order_items",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:03.328826"
+      },
+      "checksum": "4acd18ec38bc33582763117dbcf4abaf"
+    },
+    "orders": {
+      "table_name": "orders",
+      "text": "Table: orders\nDescription: Table with 12000 rows\nColumns:\n- order_id (integer) [PRIMARY KEY]\n- customer_id (integer) [FOREIGN KEY -> customers.customer_id]\n- order_date (date)\n- status (character varying)\n- total_amount (numeric)\n",
+      "metadata": {
+        "table_name": "orders",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:05.409569"
+      },
+      "checksum": "d43a4759cea59e1ff7aff874de00433c"
+    },
+    "payments": {
+      "table_name": "payments",
+      "text": "Table: payments\nDescription: Table with 9430 rows\nColumns:\n- payment_id (integer) [PRIMARY KEY]\n- order_id (integer) [FOREIGN KEY -> orders.order_id]\n- payment_date (date)\n- amount (numeric)\n- method (character varying)\n",
+      "metadata": {
+        "table_name": "payments",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:07.495529"
+      },
+      "checksum": "b9971ca03456646e1ffc3ea162e62fa8"
+    },
+    "products": {
+      "table_name": "products",
+      "text": "Table: products\nDescription: Table with 76 rows\nColumns:\n- product_id (integer) [PRIMARY KEY]\n- product_name (character varying)\n- category (character varying)\n- price (numeric)\n- stock_quantity (integer)\n",
+      "metadata": {
+        "table_name": "products",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:09.619095"
+      },
+      "checksum": "70e716e594572b4d511b69197da588df"
+    },
+    "projects": {
+      "table_name": "projects",
+      "text": "Table: projects\nDescription: Table with 21 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- description (text)\n- created_at (timestamp without time zone)\n",
+      "metadata": {
+        "table_name": "projects",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:11.724933"
+      },
+      "checksum": "47b710d0bab8f89b2b5982c2a0bdbe91"
+    },
+    "tasks": {
+      "table_name": "tasks",
+      "text": "Table: tasks\nDescription: Table with 300 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- title (character varying)\n- status (character varying)\n- assigned_to (integer) [FOREIGN KEY -> users.id]\n- project_id (integer) [FOREIGN KEY -> projects.id]\n- created_at (timestamp without time zone)\n- due_date (date)\n",
+      "metadata": {
+        "table_name": "tasks",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:13.887403"
+      },
+      "checksum": "871a9a7868da8e5c5c8a7d5da94989cb"
+    },
+    "users": {
+      "table_name": "users",
+      "text": "Table: users\nDescription: Table with 48 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- email (character varying)\n- created_at (timestamp without time zone)\n",
+      "metadata": {
+        "table_name": "users",
+        "document_type": "table_schema",
+        "updated_at": "2026-02-18T17:46:15.993541"
+      },
+      "checksum": "a8eaed5c1f615de325587e57c31ef668"
+    }
+  },
+  "dimension": 768,
+  "total_tables": 8,
+  "last_updated": "2026-02-18T17:46:15.995612"
+}
