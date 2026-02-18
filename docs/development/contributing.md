@@ -61,11 +61,11 @@ If you experience or witness unacceptable behavior, please contact us at:
 ```bash
 # Fork the repository on GitHub
 # Then clone your fork
-git clone https://github.com/your-username/talk_to_db.git
+git clone https://github.com/adityatiwari12/TalkwithDB.git
 cd talk_to_db
 
 # Add the original repository as upstream
-git remote add upstream https://github.com/original-org/talk_to_db.git
+git remote add upstream https://github.com/adityatiwari12/TalkwithDB.git
 ```
 
 ### 2. Set Up Development Environment
@@ -583,10 +583,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 1. Communication Channels
 
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: General questions and ideas
-- **Slack**: #chat-sql-development for development discussions
-- **Email**: dev-team@company.com for private questions
+- **GitHub Issues**: https://github.com/adityatiwari12/TalkwithDB/issues
+- **GitHub Discussions**: https://github.com/adityatiwari12/TalkwithDB/discussions
 
 ### 2. Asking for Help
 
@@ -635,9 +633,9 @@ If you need help with contributing:
 
 1. **Read this guide**: Review the relevant sections
 2. **Check existing issues**: Look for similar problems
-3. **Ask in discussions**: Post questions in GitHub Discussions
-4. **Contact maintainers**: Reach out to project maintainers
-5. **Join community**: Participate in our Slack channel
+3. **Ask in discussions**: Post questions at https://github.com/adityatiwari12/TalkwithDB/discussions
+4. **Contact maintainers**: Reach out via GitHub issues
+5. **Join community**: Participate in discussions and issues
 
 ## License
 

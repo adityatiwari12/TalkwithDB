@@ -88,15 +88,15 @@ echo "🚀 Deploying Chat with SQL to $ENVIRONMENT environment..."
 # Check if we're on the right branch
 if [ "$ENVIRONMENT" = "production" ]; then
     current_branch=$(git branch --show-current)
-    if [ "$current_branch" != "main" ]; then
-        echo "❌ Must be on main branch to deploy to production"
+    if [ "$current_branch" != "master" ]; then
+        echo "❌ Must be on master branch to deploy to production"
         exit 1
     fi
 fi
 
 # Pull latest changes
 echo "📥 Pulling latest changes..."
-git pull origin main
+git pull origin master
 
 # Run tests
 echo "🧪 Running tests..."

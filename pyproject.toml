@@ -116,9 +116,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/company/chat-sql"
-Repository = "https://github.com/company/chat-sql"
-Documentation = "https://chat-sql.readthedocs.io"
+Homepage = "https://github.com/adityatiwari12/TalkwithDB"
+Repository = "https://github.com/adityatiwari12/TalkwithDB"
+Documentation = "https://github.com/adityatiwari12/TalkwithDB#readme"
 
 [project.scripts]
 chat-sql = "src.chat_sql.cli:main"

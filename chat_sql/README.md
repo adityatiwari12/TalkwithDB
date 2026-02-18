@@ -358,7 +358,7 @@ This project is for educational and demonstration purposes.
 
 ## 🤝 Contributing
 
-1. Fork the repository at https://github.com/adityatiwari12/TalkwithDB
+1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests if applicable

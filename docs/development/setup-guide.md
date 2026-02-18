@@ -26,7 +26,7 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/adityatiwari12/TalkwithDB.git
 cd talk_to_db
 
 # Create a feature branch for your work
@@ -434,7 +434,7 @@ uvicorn api.app:app --port 8001
 
 1. **Check logs**: Look at application logs for detailed error messages
 2. **Read documentation**: Check `docs/` directory for detailed guides
-3. **Ask the team**: Reach out on Slack or create a GitHub issue
+3. **Ask the team**: Create an issue at https://github.com/adityatiwari12/TalkwithDB/issues
 4. **Search existing issues**: Check if someone else had the same problem
 
 ## Step 9: Best Practices
@@ -488,9 +488,8 @@ Now that you have the development environment set up, here's what to do next:
 - [Python Best Practices](https://pep8.org/)
 
 ### Team Communication
-- **Slack**: #chat-sql-development
-- **GitHub**: Issues and Discussions
-- **Email**: dev-team@company.com
+- **GitHub**: https://github.com/adityatiwari12/TalkwithDB/discussions
+- **Issues**: https://github.com/adityatiwari12/TalkwithDB/issues
 
 ---
 
