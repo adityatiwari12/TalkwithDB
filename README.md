@@ -1,5 +1,4 @@
-# Talk with DB - Version 3.1 🚀 (Enterprise Master Edition)
-
+# Talk with DB - Version 3.1 🚀 
 ## 🤖 **The Ultimate AI-Powered Natural Language to SQL Assistant**
 
 "Talk with DB" is a cutting-edge enterprise solution that leverages **Advanced Retrieval-Augmented Generation (RAG)** to transform natural language into complex, precise SQL queries. Version 3.1 marks the transition from a research prototype to a production-ready system with a professional UI, robust error handling, and a sophisticated search architecture.
