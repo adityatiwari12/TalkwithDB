@@ -8,15 +8,17 @@
 
 ## 📸 **System in Action: Visual Showcase**
 
-````carousel
-![Dashboard - Quick Insights Interface](docs/assets/screenshots/image.png)
-<!-- slide -->
-![Deep Analysis - Transparent SQL & Context Response](docs/assets/screenshots/Screenshot%202026-02-20%20132225.png)
-<!-- slide -->
-![Execution Logs - Real-time Pipeline Transparency](docs/assets/screenshots/user_query_and_output.png)
-<!-- slide -->
-![Performance Analytics - Optimization Timing Data](docs/assets/screenshots/result_metrics.png)
-````
+### **1. Dashboard - Quick Insights Interface**
+![Dashboard Interface](docs/assets/screenshots/image.png)
+
+### **2. Deep Analysis - Context-Aware Response**
+![Deep Analysis](docs/assets/screenshots/Screenshot%202026-02-20%20132225.png)
+
+### **3. Execution Flow - Real-time Pipeline Logs**
+![Execution Flow](docs/assets/screenshots/user_query_and_output.png)
+
+### **4. Performance Metrics - Optimization Data**
+![Performance Metrics](docs/assets/screenshots/result_metrics.png)
 
 ---
 
