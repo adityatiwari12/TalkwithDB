@@ -6,7 +6,9 @@
 ---
 
 ## 📸 **System in Action: Visual Showcase**
-![Screenshot](docs/assets/screenshots/Screenshot1.png)
+![Screenshot](docs/assets/screenshots/Screenshot1.jpg)
+![Screenshot](docs/assets/screenshots/Screenshot2.jpg)
+
 
 ---
 
