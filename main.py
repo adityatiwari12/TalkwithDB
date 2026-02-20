@@ -10,10 +10,15 @@ sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'src'))
 
 def run_api():
-    print("🚀 Launching FastAPI Backend...")
+    print("🚀 Launching FastAPI Backend on http://localhost:8001 ...")
     os.environ["PYTHONPATH"] = f"{ROOT_DIR};{os.path.join(ROOT_DIR, 'src')}"
-    # apps/api.py uses uvicorn internally or we can use it here
-    subprocess.run([sys.executable, "apps/api.py"])
+    subprocess.run([
+        sys.executable, "-m", "uvicorn",
+        "apps.api:app",
+        "--host", "0.0.0.0",
+        "--port", "8001",
+        "--reload"
+    ])
 
 def run_ui():
     print("🎨 Launching Streamlit Web UI...")

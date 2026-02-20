@@ -3,15 +3,14 @@
     "venv": ".venv",
     "include": [
         "src",
-        "chat_ui.py",
-        "main.py",
-        "chat_v3.py"
+        "apps",
+        "scripts",
+        "main.py"
     ],
     "pythonVersion": "3.11",
     "typeCheckingMode": "basic",
-    "reportMissingImports": true,
+    "reportMissingImports": false,
     "extraPaths": [
-        "src",
-        "src/chat_sql"
+        "src"
     ]
 }

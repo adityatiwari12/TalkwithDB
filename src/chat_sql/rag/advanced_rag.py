@@ -11,9 +11,9 @@ from datetime import datetime
 import json
 import hashlib
 
-from ..config import config
-from .embedder import embedder
-from .optimized_vector_store import OptimizedVectorStore
+from chat_sql.config import config
+from chat_sql.rag.embedder import embedder
+from chat_sql.rag.optimized_vector_store import OptimizedVectorStore
 
 
 @dataclass

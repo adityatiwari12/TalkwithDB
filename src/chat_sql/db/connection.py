@@ -8,20 +8,7 @@ from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any, Optional
 from contextlib import contextmanager
 
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-try:
-    from config import config
-except ImportError:
-    # Fallback if running from different directory
-    class Config:
-        DB_HOST = "localhost"
-        DB_PORT = 5432
-        DB_NAME = "chatdb"
-        DB_USER = "postgres"
-        DB_PASSWORD = "1234"
-    config = Config()
+from chat_sql.config import config
 
 
 class DatabaseConnection:

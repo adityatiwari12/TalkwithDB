@@ -9,7 +9,7 @@ from typing import List
 import json
 import time
 
-from ..config import config
+from chat_sql.config import config
 
 
 class Embedder:

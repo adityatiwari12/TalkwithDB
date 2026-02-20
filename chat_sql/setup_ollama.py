@@ -6,8 +6,14 @@ Downloads and pulls required models for the Chat with SQL system.
 import subprocess
 import sys
 import requests
-import time
-from config import config
+import os
+import sys
+
+# Allow running as a script from the project root
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(ROOT_DIR, 'src'))
+
+from chat_sql.config import config
 
 
 class OllamaSetup:

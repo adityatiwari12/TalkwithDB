@@ -7,7 +7,14 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
 import os
-from config import config
+import sys
+import os
+
+# Add src to path for absolute imports
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT_DIR, 'src'))
+
+from chat_sql.config import config
 
 
 class DatabaseSetup:

@@ -12,7 +12,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
-from ..config import config
+from chat_sql.config import config
 
 
 @dataclass
@@ -315,7 +315,7 @@ class OptimizedVectorStore:
             return
         
         # Get embeddings for all tables
-        from rag.embedder import embedder
+        from chat_sql.rag.embedder import embedder
         embedder_instance = embedder
         
         embeddings_list = []

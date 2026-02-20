@@ -10,8 +10,8 @@ from typing import List, Dict, Set, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from ..config import config
-from ..db.connection import db_connection
+from chat_sql.config import config
+from chat_sql.db.connection import db_connection
 
 
 @dataclass
@@ -53,19 +53,19 @@ class SchemaManager:
     - Minimal re-embedding requirements
     """
     
-    def __init__(self, snapshot_path: str = None):
+    def __init__(self, snapshot_path: Optional[str] = None):
         """
         Initialize schema manager.
         
         Args:
             snapshot_path: Path to store schema snapshots
         """
-        self.snapshot_path = snapshot_path or os.path.join(
+        self.snapshot_path: str = snapshot_path or os.path.join(
             config.DATA_DIR, "schema_snapshots"
         )
         os.makedirs(self.snapshot_path, exist_ok=True)
-        self.current_snapshot = None
-        self.last_snapshot = None
+        self.current_snapshot: Optional[SchemaSnapshot] = None
+        self.last_snapshot: Optional[SchemaSnapshot] = None
     
     def get_current_schema(self) -> SchemaSnapshot:
         """
@@ -74,7 +74,7 @@ class SchemaManager:
         Returns:
             Current schema snapshot
         """
-        from db.schema_loader import schema_loader
+        from chat_sql.db.schema_loader import schema_loader
         
         tables = []
         table_names = schema_loader.get_all_tables()
@@ -210,12 +210,15 @@ class SchemaManager:
             self.last_snapshot = self.load_last_snapshot()
             if not self.last_snapshot:
                 diff = SchemaDiff()
+                assert self.current_snapshot is not None, "current_snapshot must be set"
                 diff.added_tables = [t.name for t in self.current_snapshot.tables]
                 return diff
         
         diff = SchemaDiff()
         
         # Create lookup dictionaries
+        assert self.current_snapshot is not None, "current_snapshot must be set"
+        assert self.last_snapshot is not None, "last_snapshot must be set"
         current_tables = {t.name: t for t in self.current_snapshot.tables}
         last_tables = {t.name: t for t in self.last_snapshot.tables}
         
@@ -275,6 +278,7 @@ class SchemaManager:
             self.get_current_schema()
         
         # Find table in current snapshot
+        assert self.current_snapshot is not None, "current_snapshot must be set"
         for table in self.current_snapshot.tables:
             if table.name == table_name:
                 doc = f"Table: {table.name}\n"
@@ -313,6 +317,7 @@ class SchemaManager:
         potential_tables = []
         
         # Get all table names
+        assert self.current_snapshot is not None, "current_snapshot must be set"
         table_names = [t.name.lower() for t in self.current_snapshot.tables]
         
         # Find exact matches

@@ -5,13 +5,13 @@ Implements efficient retrieval for large-scale schemas.
 
 import numpy as np
 import re
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
 from datetime import datetime
 
-from ..config import config
-from .embedder import embedder
-from .optimized_vector_store import OptimizedVectorStore
-from ..core.schema_manager import schema_manager
+from chat_sql.config import config
+from chat_sql.rag.embedder import embedder
+from chat_sql.rag.optimized_vector_store import OptimizedVectorStore
+from chat_sql.core.schema_manager import schema_manager
 
 
 class OptimizedSchemaRetriever:
@@ -29,10 +29,10 @@ class OptimizedSchemaRetriever:
     def __init__(self):
         """Initialize optimized schema retriever."""
         self.embedder = embedder
-        self.vector_store = None
+        self.vector_store: Optional[OptimizedVectorStore] = None
         self.schema_manager = schema_manager
         self._initialized = False
-        self._last_refresh = None
+        self._last_refresh: Optional[datetime] = None
         
         # Lazy initialization - only when needed
         self._ensure_initialized()
@@ -62,6 +62,7 @@ class OptimizedSchemaRetriever:
         self._initialized = True
         self._last_refresh = datetime.now()
         
+        assert self.vector_store is not None, "vector_store must be initialized"
         print(f"Schema retriever initialized with {self.vector_store.size()} tables")
     
     def _update_schema_incremental(self) -> None:
@@ -105,6 +106,7 @@ class OptimizedSchemaRetriever:
                     break
         
         # Add to vector store
+        assert self.vector_store is not None, "vector_store must be initialized"
         if len(tables_to_update) == 1:
             # Single table update
             table_name = tables_to_update[0]
@@ -187,8 +189,8 @@ class OptimizedSchemaRetriever:
             return all_tables[:max_tables] if len(all_tables) > max_tables else all_tables
         
         # Validate that tables exist in vector store
-        available_tables = self.vector_store.get_table_names()
-        filtered_tables = []
+        available_tables: List[str] = self.vector_store.get_table_names()
+        filtered_tables: List[str] = []
         
         for table in potential_tables:
             # Check for exact or partial matches
@@ -200,7 +202,7 @@ class OptimizedSchemaRetriever:
         
         return filtered_tables[:max_tables] if len(filtered_tables) > max_tables else filtered_tables
     
-    def retrieve_schema(self, query: str, top_k: int = None) -> List[Dict[str, Any]]:
+    def retrieve_schema(self, query: str, top_k: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Retrieve relevant schema information for a query.
         
@@ -225,6 +227,7 @@ class OptimizedSchemaRetriever:
         # Embed query
         query_embedding = self.embedder.embed_query(query)
         
+        assert self.vector_store is not None, "vector_store must be initialized"
         # Search in filtered table space
         results = self.vector_store.search_tables(
             query_embedding=query_embedding,
@@ -259,7 +262,7 @@ class OptimizedSchemaRetriever:
         results = self.retrieve_schema(query, top_k=limit)
         
         # Extract table names from results
-        table_names = []
+        table_names: List[str] = []
         for result in results:
             if result['table_name'] not in table_names:
                 table_names.append(result['table_name'])
@@ -320,6 +323,7 @@ class OptimizedSchemaRetriever:
         """
         self._ensure_initialized()
         
+        assert self.vector_store is not None, "vector_store must be initialized"
         stats = self.vector_store.get_stats()
         stats.update({
             'last_refresh': self._last_refresh.isoformat() if self._last_refresh else None,

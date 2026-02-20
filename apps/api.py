@@ -14,18 +14,20 @@ import logging
 from datetime import datetime
 import asyncio
 
+# Add src to path for absolute imports
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT_DIR, 'src'))
 
-from ..config import config
-from ..rag.advanced_rag import AdvancedRAGPipeline, ConversationMemory, ConversationTurn
-from ..rag.optimized_retriever import optimized_schema_retriever
-from ..core.optimized_pipeline import OptimizedChatWithSQLPipeline
-from ..llm.sql_generator import sql_generator
-from ..llm.result_formatter import ResultFormatter
-from ..safety.sql_validator import sql_validator
-from ..db.connection import db_connection
+from chat_sql.config import config
+from chat_sql.rag.advanced_rag import AdvancedRAGPipeline, ConversationMemory, ConversationTurn
+from chat_sql.rag.optimized_retriever import optimized_schema_retriever
+from chat_sql.core.optimized_pipeline import OptimizedChatWithSQLPipeline
+from chat_sql.llm.sql_generator import sql_generator
+from chat_sql.llm.result_formatter import ResultFormatter
+from chat_sql.safety.sql_validator import sql_validator
+from chat_sql.db.connection import db_connection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -372,7 +374,7 @@ async def clear_history(session_id: str):
 async def get_schema():
     """Get database schema information."""
     try:
-        from ..db.schema_loader import schema_loader
+        from chat_sql.db.schema_loader import schema_loader
         
         tables = schema_loader.get_all_tables()
         schema_info = []
@@ -423,7 +425,7 @@ async def get_schema():
 async def get_table_details(table_name: str):
     """Get detailed information about a specific table."""
     try:
-        from db.schema_loader import schema_loader
+        from chat_sql.db.schema_loader import schema_loader
         
         table_info = schema_loader.get_table_info(table_name)
         
@@ -554,7 +556,7 @@ async def get_suggestions(request: SuggestionRequest):
         
         # Add schema-based suggestions
         try:
-            from ..db.schema_loader import schema_loader
+            from chat_sql.db.schema_loader import schema_loader
             tables = schema_loader.get_all_tables()
             for table in tables[:5]:  # Limit to first 5 tables
                 if partial in table.lower() or not partial:

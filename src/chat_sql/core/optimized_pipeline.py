@@ -9,15 +9,12 @@ import time
 import sys
 import os
 
-# Add the current directory to path for sibling imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from ..config import config
-from ..rag.optimized_retriever import optimized_schema_retriever
-from ..llm.sql_generator import sql_generator
-from ..llm.result_formatter import ResultFormatter
-from ..safety.sql_validator import sql_validator
-from ..db.connection import db_connection
+from chat_sql.config import config
+from chat_sql.rag.optimized_retriever import optimized_schema_retriever
+from chat_sql.llm.sql_generator import sql_generator
+from chat_sql.llm.result_formatter import ResultFormatter
+from chat_sql.safety.sql_validator import sql_validator
+from chat_sql.db.connection import db_connection
 
 
 # Configure logging

@@ -9,10 +9,7 @@ import os
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from ..config import config
+from chat_sql.config import config
 
 
 @dataclass

@@ -8,7 +8,7 @@ import json
 from typing import Dict, Any, Optional
 import re
 
-from ..config import config
+from chat_sql.config import config
 
 
 class SQLGenerator:

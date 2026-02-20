@@ -28,10 +28,9 @@ class Config:
     # Embedding Configuration
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", OLLAMA_EMBED_MODEL)
     
-    # Data directory for persistent storage
-    DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
-
-    # Vector store path (persistent)
+    # Data directory for persistent storage (relative to project root)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    DATA_DIR = os.path.join(BASE_DIR, "data")
     VECTOR_STORE_PATH = os.path.join(DATA_DIR, "schema_vectors")
 
     # Maximum tables to retrieve per query (optimization for large schemas)
