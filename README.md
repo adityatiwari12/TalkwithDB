@@ -9,13 +9,13 @@
 ## 📸 **System in Action: Visual Showcase**
 
 ````carousel
-![Dashboard - Quick Insights Interface](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/docs/assets/screenshots/image.png)
+![Dashboard - Quick Insights Interface](docs/assets/screenshots/image.png)
 <!-- slide -->
-![Deep Analysis - Transparent SQL & Context Response](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/docs/assets/screenshots/Screenshot%202026-02-20%20132225.png)
+![Deep Analysis - Transparent SQL & Context Response](docs/assets/screenshots/Screenshot%202026-02-20%20132225.png)
 <!-- slide -->
-![Execution Logs - Real-time Pipeline Transparency](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/docs/assets/screenshots/user_query_and_output.png)
+![Execution Logs - Real-time Pipeline Transparency](docs/assets/screenshots/user_query_and_output.png)
 <!-- slide -->
-![Performance Analytics - Optimization Timing Data](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/docs/assets/screenshots/result_metrics.png)
+![Performance Analytics - Optimization Timing Data](docs/assets/screenshots/result_metrics.png)
 ````
 
 ---
