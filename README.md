@@ -12,7 +12,7 @@
 ![Dashboard Interface](docs/assets/screenshots/image.png)
 
 ### **2. Deep Analysis - Context-Aware Response**
-![Deep Analysis](docs/assets/screenshots/Screenshot%202026-02-20%20132225.png)
+![Deep Analysis](<docs/assets/screenshots/Screenshot 2026-02-20 132225.png>)
 
 ### **3. Execution Flow - Real-time Pipeline Logs**
 ![Execution Flow](docs/assets/screenshots/user_query_and_output.png)
