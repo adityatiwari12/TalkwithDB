@@ -1,24 +1,31 @@
-"""
-Main entry point fix for proper module loading.
-Add this file to resolve import issues when running from project root.
-"""
-
-import sys
 import os
+import sys
+import subprocess
+import time
+from concurrent.futures import ThreadPoolExecutor
 
-# Add the src directory to Python path
-project_root = os.path.dirname(__file__)
-src_path = os.path.join(project_root, 'src')
-chat_sql_path = os.path.join(src_path, 'chat_sql')
+# Ensure the root directory is in the python path
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(ROOT_DIR)
+sys.path.append(os.path.join(ROOT_DIR, 'src'))
 
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
-if chat_sql_path not in sys.path:
-    sys.path.insert(0, chat_sql_path)
+def run_api():
+    print("🚀 Launching FastAPI Backend...")
+    os.environ["PYTHONPATH"] = f"{ROOT_DIR};{os.path.join(ROOT_DIR, 'src')}"
+    # apps/api.py uses uvicorn internally or we can use it here
+    subprocess.run([sys.executable, "apps/api.py"])
 
-# Now we can import properly
-from chat_sql.api.v3_api import app
+def run_ui():
+    print("🎨 Launching Streamlit Web UI...")
+    # Wait for API to potentially start
+    time.sleep(3)
+    os.environ["PYTHONPATH"] = f"{ROOT_DIR};{os.path.join(ROOT_DIR, 'src')}"
+    subprocess.run(["streamlit", "run", "apps/ui.py", "--server.port", "8502"])
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("chat_sql.api.v3_api:app", host="127.0.0.1", port=8001, reload=True)
+    print("🌟 Talk with DB - Professional Edition 🌟")
+    print("-" * 40)
+    
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        executor.submit(run_api)
+        executor.submit(run_ui)
