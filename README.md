@@ -1,4 +1,4 @@
-# Talk with DB - Version 3.1 🚀 (Enterprise Production Ready)
+# Talk with DB - Version 3.1 🚀 
 
 ## 🤖 **The Ultimate AI-Powered Natural Language to SQL Assistant**
 
