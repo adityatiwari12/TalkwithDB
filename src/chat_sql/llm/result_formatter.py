@@ -8,7 +8,7 @@ import json
 from typing import List, Dict, Any, Optional
 import re
 
-from config import config
+from ..config import config
 
 
 class ResultFormatter:
@@ -57,9 +57,11 @@ class ResultFormatter:
                     "prompt": user_prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.3,  # Slightly higher for natural language
-                        "num_predict": 1200,  # Further increased for complete answers
-                        "num_ctx": 4096      # Ensure sufficient context window
+                        "temperature": 0.4,  # Slightly higher for more natural language
+                        "num_predict": 2400,  # Doubled for much longer, detailed answers
+                        "num_ctx": 8192,      # Doubled context window for better understanding
+                        "top_p": 0.9,         # Add for better response diversity
+                        "repeat_penalty": 1.1  # Reduce repetition
                     }
                 },
                 timeout=90  # Increased timeout for longer responses

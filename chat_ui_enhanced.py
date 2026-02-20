@@ -30,21 +30,16 @@ st.markdown("""
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        background: linear-gradient(45deg, #1a237e, #0d47a1);
-        color: #ffffff;
+        background: linear-gradient(45deg, #1f77b4, #9c27b0);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 1rem;
         text-align: center;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
     .sub-header {
         font-size: 1.2rem;
-        color: #ffffff;
-        background-color: #1a237e;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
+        color: #666;
         text-align: center;
         margin-bottom: 2rem;
     }
@@ -69,28 +64,22 @@ st.markdown("""
     }
     
     .user-message {
-        background: linear-gradient(135deg, #e8f5e8, #c8e6c8);
-        border-left: 5px solid #2e7d32;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-left: 5px solid #2196f3;
         margin-left: 2rem;
-        color: #1b5e20;
-        font-weight: 500;
     }
     
     .assistant-message {
-        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-        border-left: 5px solid #f57c00;
+        background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+        border-left: 5px solid #9c27b0;
         margin-right: 2rem;
-        color: #e65100;
-        font-weight: 500;
     }
     
     .processing-message {
-        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-        border-left: 5px solid #1976d2;
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-left: 5px solid #ff9800;
         margin-right: 2rem;
         animation: pulse 1.5s infinite;
-        color: #0d47a1;
-        font-weight: 500;
     }
     
     @keyframes pulse {
@@ -101,30 +90,28 @@ st.markdown("""
     
     /* SQL Code styling */
     .sql-code {
-        background: #1e1e1e;
-        color: #ffffff;
+        background: #263238;
+        color: #aed581;
         padding: 1rem;
         border-radius: 0.5rem;
         font-family: 'Courier New', monospace;
         font-size: 0.9rem;
         overflow-x: auto;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        border: 1px solid #333;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     /* Quick questions styling */
     .quick-questions {
-        background: linear-gradient(135deg, #2d3748, #1a237e);
+        background: linear-gradient(135deg, #f5f5f5, #e8eaf6);
         padding: 1.5rem;
         border-radius: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border: 1px solid #1a237e;
     }
     
     .question-button {
-        background: linear-gradient(135deg, #ffffff, #f3f4f6);
-        color: #1a237e;
+        background: linear-gradient(135deg, #2196f3, #1976d2);
+        color: white;
         border: none;
         padding: 0.8rem 1.2rem;
         border-radius: 2rem;
@@ -132,14 +119,13 @@ st.markdown("""
         cursor: pointer;
         transition: all 0.3s ease;
         font-weight: 500;
-        box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+        box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
     }
     
     .question-button:hover {
-        background: linear-gradient(135deg, #f3f4f6, #e53935);
-        color: #ffffff;
+        background: linear-gradient(135deg, #1976d2, #1565c0);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(26, 115, 232, 0.4);
+        box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
     }
     
     /* Metrics styling */
@@ -150,17 +136,16 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         border-left: 4px solid #4caf50;
         margin-bottom: 1rem;
-        border: 1px solid #e0e0e0;
     }
     
     .metric-value {
         font-size: 2rem;
         font-weight: bold;
-        color: #2e7d32;
+        color: #4caf50;
     }
     
     .metric-label {
-        color: #1a237e;
+        color: #666;
         font-size: 0.9rem;
     }
     
@@ -168,13 +153,10 @@ st.markdown("""
     .sidebar-header {
         font-size: 1.3rem;
         font-weight: bold;
-        color: #ffffff;
-        background-color: #1a237e;
-        padding: 1rem;
-        border-radius: 0.5rem;
+        color: #1f77b4;
         margin-bottom: 1rem;
-        text-align: center;
-        border: 1px solid #0d47a1;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e0e0e0;
     }
     
     /* Status indicators */

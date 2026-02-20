@@ -7,7 +7,7 @@ import subprocess
 import sys
 import requests
 import time
-from config import config
+from .config import config
 
 
 class OllamaSetup:

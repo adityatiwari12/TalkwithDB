@@ -6,21 +6,22 @@ Retrieves relevant schema information based on user queries.
 from typing import List, Dict, Any
 import numpy as np
 
-from config import config
-from rag.embedder import embedder
-from rag.vector_store import VectorStore, VectorStoreItem
-from db.schema_loader import schema_loader
+from ..config import config
+from .embedder import embedder
+from .vector_store import VectorStore, VectorStoreItem
+from ..db.schema_loader import schema_loader
 
 
 class SchemaRetriever:
     """Retrieves relevant schema information using RAG."""
     
     def __init__(self):
-        """Initialize schema retriever."""
+        """Initialize schema retriever with lazy loading."""
         self.embedder = embedder
         self.vector_store = None
         self.schema_loader = schema_loader
-        self._initialize_vector_store()
+        # Don't initialize vector store immediately
+        # It will be initialized when first needed
     
     def _initialize_vector_store(self) -> None:
         """Initialize and populate vector store with schema information."""
@@ -31,10 +32,14 @@ class SchemaRetriever:
         self.vector_store = VectorStore(dimension)
         
         # Load and embed schema documents
-        self._populate_vector_store()
+        # Note: This will be called lazily when needed
     
     def _populate_vector_store(self) -> None:
         """Populate vector store with schema documents."""
+        # Initialize vector store if needed
+        if self.vector_store is None:
+            self._initialize_vector_store()
+        
         # Get schema documents
         documents = self.schema_loader.schema_to_documents()
         
@@ -67,7 +72,11 @@ class SchemaRetriever:
         """
         top_k = top_k or config.TOP_K_RETRIEVAL
         
-        # Embed query
+        # Initialize vector store if needed
+        if self.vector_store is None:
+            self._initialize_vector_store()
+        
+        # Perform semantic search
         query_embedding = self.embedder.embed_query(query)
         
         # Search vector store
@@ -149,5 +158,12 @@ class SchemaRetriever:
         }
 
 
-# Global schema retriever instance
-schema_retriever = SchemaRetriever()
+# Global schema retriever instance (lazy initialization)
+schema_retriever = None
+
+def get_schema_retriever():
+    """Get or create the global schema retriever instance."""
+    global schema_retriever
+    if schema_retriever is None:
+        schema_retriever = SchemaRetriever()
+    return schema_retriever

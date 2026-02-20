@@ -12,21 +12,12 @@ import os
 # Add the current directory to path for sibling imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-try:
-    from config import config
-except ImportError as e:
-    print(f"Warning: Could not import config: {e}")
-    # Create a minimal config fallback
-    class Config:
-        def validate(self):
-            pass
-    config = Config()
-
-from rag.optimized_retriever import optimized_schema_retriever
-from llm.sql_generator import sql_generator
-from llm.result_formatter import ResultFormatter
-from safety.sql_validator import sql_validator
-from db.connection import db_connection
+from ..config import config
+from ..rag.optimized_retriever import optimized_schema_retriever
+from ..llm.sql_generator import sql_generator
+from ..llm.result_formatter import ResultFormatter
+from ..safety.sql_validator import sql_validator
+from ..db.connection import db_connection
 
 
 # Configure logging

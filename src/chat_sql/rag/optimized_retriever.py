@@ -8,10 +8,10 @@ import re
 from typing import List, Dict, Any, Set
 from datetime import datetime
 
-from config import config
-from rag.embedder import embedder
-from rag.optimized_vector_store import OptimizedVectorStore
-from core.schema_manager import schema_manager
+from ..config import config
+from .embedder import embedder
+from .optimized_vector_store import OptimizedVectorStore
+from ..core.schema_manager import schema_manager
 
 
 class OptimizedSchemaRetriever:

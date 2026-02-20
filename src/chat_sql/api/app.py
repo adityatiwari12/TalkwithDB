@@ -9,8 +9,8 @@ from typing import Dict, Any, List, Optional
 import logging
 from contextlib import asynccontextmanager
 
-from pipeline.chat_with_sql import chat_pipeline
-from config import config
+from ..core.chat_with_sql import chat_pipeline
+from ..config import config
 
 
 # Configure logging

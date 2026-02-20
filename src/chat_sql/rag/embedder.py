@@ -9,7 +9,7 @@ from typing import List
 import json
 import time
 
-from config import config
+from ..config import config
 
 
 class Embedder:

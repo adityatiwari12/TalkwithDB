@@ -8,7 +8,7 @@ import json
 from typing import Dict, Any, Optional
 import re
 
-from config import config
+from ..config import config
 
 
 class SQLGenerator:
@@ -54,8 +54,10 @@ class SQLGenerator:
                     "stream": False,
                     "options": {
                         "temperature": 0.1,  # Low temperature for consistent SQL
-                        "num_predict": 1200,  # Increased for longer explanations
-                        "num_ctx": 4096      # Ensure sufficient context window
+                        "num_predict": 1800,  # Increased for longer, detailed explanations
+                        "num_ctx": 8192,      # Increased context window
+                        "top_p": 0.9,         # Better response diversity
+                        "repeat_penalty": 1.1  # Reduce repetition
                     }
                 },
                 timeout=90  # Increased timeout for longer responses

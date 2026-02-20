@@ -11,9 +11,9 @@ from datetime import datetime
 import json
 import hashlib
 
-from config import config
-from rag.embedder import embedder
-from rag.optimized_vector_store import OptimizedVectorStore
+from ..config import config
+from .embedder import embedder
+from .optimized_vector_store import OptimizedVectorStore
 
 
 @dataclass
@@ -357,7 +357,7 @@ class LLMReranker:
         self.rerank_cache = {}
     
     def rerank(self, query: str, candidates: List[HybridSearchResult],
-               top_k: int = 3) -> List[RererankedResult]:
+               top_k: int = 3) -> List[RerankedResult]:
         """
         Re-rank candidates using LLM judgment.
         

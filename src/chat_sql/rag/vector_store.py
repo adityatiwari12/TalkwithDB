@@ -10,7 +10,7 @@ import os
 from typing import List, Tuple, Dict, Any
 from dataclasses import dataclass
 
-from config import config
+from ..config import config
 
 
 @dataclass

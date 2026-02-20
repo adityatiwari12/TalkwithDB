@@ -18,14 +18,14 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from config import config
-from rag.advanced_rag import AdvancedRAGPipeline, ConversationMemory, ConversationTurn
-from rag.optimized_retriever import optimized_schema_retriever
-from core.optimized_pipeline import OptimizedChatWithSQLPipeline
-from llm.sql_generator import sql_generator
-from llm.result_formatter import ResultFormatter
-from safety.sql_validator import sql_validator
-from db.connection import db_connection
+from ..config import config
+from ..rag.advanced_rag import AdvancedRAGPipeline, ConversationMemory, ConversationTurn
+from ..rag.optimized_retriever import optimized_schema_retriever
+from ..core.optimized_pipeline import OptimizedChatWithSQLPipeline
+from ..llm.sql_generator import sql_generator
+from ..llm.result_formatter import ResultFormatter
+from ..safety.sql_validator import sql_validator
+from ..db.connection import db_connection
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +48,14 @@ app.add_middleware(
 )
 
 # Initialize components
-advanced_rag = AdvancedRAGPipeline(optimized_schema_retriever.vector_store)
+try:
+    from ..rag.retriever import get_schema_retriever
+    schema_retriever = get_schema_retriever()
+    advanced_rag = AdvancedRAGPipeline(schema_retriever.vector_store)
+except Exception as e:
+    logger.error(f"Failed to initialize AdvancedRAGPipeline: {e}")
+    # Fallback to simple pipeline
+    advanced_rag = None
 pipeline = OptimizedChatWithSQLPipeline()
 
 # Session management
@@ -173,6 +180,16 @@ async def chat(request: ChatRequest):
         active_sessions[session_id]["last_activity"] = datetime.now()
         active_sessions[session_id]["message_count"] += 1
         
+        # Check if advanced_rag is available
+        if advanced_rag is None:
+            return ChatResponse(
+                response="I'm sorry, the advanced RAG system is not available right now. Please try again later.",
+                sql_query=None,
+                results=None,
+                session_id=session_id,
+                metadata={"error": "AdvancedRAGPipeline not initialized"}
+            )
+        
         # Step 1: Advanced RAG retrieval
         logger.info(f"Processing chat message for session {session_id}: {request.message}")
         
@@ -184,14 +201,26 @@ async def chat(request: ChatRequest):
         
         # Step 2: Generate SQL
         sql_start = datetime.now()
-        sql_query = sql_generator.generate_sql(
-            question=retrieval_result['rewritten_query'],
-            schema_context=retrieval_result['schema_context']
-        )
+        try:
+            sql_result = sql_generator.generate_sql(
+                question=retrieval_result['rewritten_query'],
+                schema_context=retrieval_result['schema_context']
+            )
+            sql_query = sql_result.get('sql', '')
+            logger.info(f"Generated SQL: {sql_query}")
+        except Exception as e:
+            logger.error(f"SQL generation failed: {e}")
+            return ChatResponse(
+                response=f"I'm sorry, I encountered an error generating the SQL query: {str(e)}",
+                sql_query=None,
+                results=None,
+                session_id=session_id,
+                metadata={"error": "SQL generation failed"}
+            )
         sql_time = (datetime.now() - sql_start).total_seconds()
         
         # Step 3: Validate SQL
-        validation_result = sql_validator.validate(sql_query)
+        validation_result = sql_validator.validate_sql(sql_query)
         
         if not validation_result.is_valid:
             # Return error response
@@ -240,7 +269,7 @@ async def chat(request: ChatRequest):
         
         # Step 5: Format response
         formatter = ResultFormatter()
-        natural_response = formatter.format_results(
+        natural_response = formatter.format_result(
             question=request.message,
             sql_query=sql_query,
             results=results
@@ -344,9 +373,9 @@ async def clear_history(session_id: str):
 async def get_schema():
     """Get database schema information."""
     try:
-        from db.schema_loader import schema_loader
+        from ..db.schema_loader import schema_loader
         
-        tables = schema_loader.list_tables()
+        tables = schema_loader.get_all_tables()
         schema_info = []
         
         for table_name in tables:
@@ -367,9 +396,9 @@ async def get_schema():
                     "columns": [
                         {
                             "name": col.name,
-                            "type": str(col.type),
-                            "nullable": col.nullable,
-                            "primary_key": col.primary_key
+                            "type": col.data_type,
+                            "nullable": True,  # Will be populated from database query
+                            "primary_key": col.is_primary_key
                         }
                         for col in table_info.columns
                     ],
@@ -412,7 +441,7 @@ async def get_table_details(table_name: str):
             "columns": [
                 {
                     "name": col.name,
-                    "type": str(col.type),
+                    "type": col.data_type,
                     "nullable": col.nullable,
                     "primary_key": col.primary_key,
                     "foreign_key": col.foreign_key
@@ -525,10 +554,15 @@ async def get_suggestions(request: SuggestionRequest):
         filtered = [s for s in suggestions if partial in s.lower()]
         
         # Add schema-based suggestions
-        tables = optimized_schema_retriever.vector_store.get_table_names()
-        for table in tables[:5]:  # Limit to first 5 tables
-            if partial in table.lower() or not partial:
-                filtered.append(f"Show all records from {table}")
+        try:
+            from ..db.schema_loader import schema_loader
+            tables = schema_loader.get_all_tables()
+            for table in tables[:5]:  # Limit to first 5 tables
+                if partial in table.lower() or not partial:
+                    filtered.append(f"Show all records from {table}")
+        except Exception as e:
+            logger.error(f"Error getting table names: {e}")
+            # Continue without table suggestions
                 filtered.append(f"Count rows in {table}")
         
         return {

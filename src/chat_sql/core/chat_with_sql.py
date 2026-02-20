@@ -6,12 +6,12 @@ Orchestrates the complete RAG-based SQL generation and execution pipeline.
 from typing import Dict, Any, List
 import logging
 
-from config import config
-from rag.retriever import schema_retriever
-from llm.sql_generator import sql_generator
-from llm.result_formatter import ResultFormatter
-from safety.sql_validator import sql_validator
-from db.connection import db_connection
+from ..config import config
+from ..rag.retriever import schema_retriever
+from ..llm.sql_generator import sql_generator
+from ..llm.result_formatter import ResultFormatter
+from ..safety.sql_validator import sql_validator
+from ..db.connection import db_connection
 
 
 # Configure logging

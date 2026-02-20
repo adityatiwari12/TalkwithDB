@@ -10,8 +10,8 @@ from typing import List, Dict, Set, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from config import config
-from db.connection import db_connection
+from ..config import config
+from ..db.connection import db_connection
 
 
 @dataclass

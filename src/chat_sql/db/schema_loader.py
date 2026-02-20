@@ -7,8 +7,21 @@ import psycopg2
 from typing import List, Dict, Any
 from dataclasses import dataclass
 
-from config import config
-from db.connection import db_connection
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+try:
+    from config import config
+except ImportError:
+    # Fallback if running from different directory
+    class Config:
+        DB_HOST = "localhost"
+        DB_PORT = 5432
+        DB_NAME = "chatdb"
+        DB_USER = "postgres"
+        DB_PASSWORD = "1234"
+    config = Config()
+from .connection import db_connection
 
 
 @dataclass
@@ -16,6 +29,7 @@ class ColumnInfo:
     """Information about a database column."""
     name: str
     data_type: str
+    is_nullable: bool
     is_primary_key: bool
     is_foreign_key: bool
     references_table: str = None

@@ -12,7 +12,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
-from config import config
+from ..config import config
 
 
 @dataclass

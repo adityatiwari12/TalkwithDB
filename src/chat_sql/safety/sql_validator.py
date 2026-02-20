@@ -12,13 +12,7 @@ from dataclasses import dataclass
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-try:
-    from config import config
-except ImportError:
-    # Fallback config
-    class Config:
-        MAX_RESULT_ROWS = 200
-    config = Config()
+from ..config import config
 
 
 @dataclass
