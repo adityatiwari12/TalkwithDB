@@ -4,7 +4,7 @@ Converts schema into text documents for RAG retrieval.
 """
 
 import psycopg2
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 import sys
@@ -32,8 +32,8 @@ class ColumnInfo:
     is_nullable: bool
     is_primary_key: bool
     is_foreign_key: bool
-    references_table: str = None
-    references_column: str = None
+    references_table: Optional[str] = None
+    references_column: Optional[str] = None
 
 
 @dataclass
@@ -127,6 +127,7 @@ class SchemaLoader:
             column = ColumnInfo(
                 name=col_name,
                 data_type=data_type,
+                is_nullable=is_nullable,
                 is_primary_key=is_pk,
                 is_foreign_key=is_fk,
                 references_table=fk_map[col_name][0] if is_fk else None,

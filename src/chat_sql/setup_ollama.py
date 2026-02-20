@@ -7,7 +7,24 @@ import subprocess
 import sys
 import requests
 import time
-from .config import config
+import os
+
+# Add the current directory to sys.path to help with imports when run as a script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+try:
+    # Try as a module (relative import)
+    from .config import config
+except (ImportError, ValueError):
+    # Try as a script or absolute import
+    try:
+        from config import config
+    except ImportError:
+        # Fallback to absolute path from root if necessary
+        sys.path.append(os.path.dirname(current_dir))
+        from chat_sql.config import config
 
 
 class OllamaSetup:

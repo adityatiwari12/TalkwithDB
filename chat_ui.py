@@ -13,7 +13,7 @@ from datetime import datetime
 import uuid
 import base64
 import time
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 # Page configuration
 st.set_page_config(
@@ -297,8 +297,8 @@ def send_chat_message(message: str) -> Dict[str, Any]:
             'metadata': {}
         }
 
-def display_chat_message(message: str, is_user: bool = False, sql_query: str = None, 
-                        processing_time: float = None, result_count: int = None):
+def display_chat_message(message: str, is_user: bool = False, sql_query: Optional[str] = None, 
+                        processing_time: Optional[float] = None, result_count: Optional[int] = None):
     """Display a chat message with enhanced styling"""
     if is_user:
         st.markdown(f"""

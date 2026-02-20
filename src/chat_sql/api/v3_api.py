@@ -560,11 +560,10 @@ async def get_suggestions(request: SuggestionRequest):
             for table in tables[:5]:  # Limit to first 5 tables
                 if partial in table.lower() or not partial:
                     filtered.append(f"Show all records from {table}")
+                    filtered.append(f"Count rows in {table}")
         except Exception as e:
             logger.error(f"Error getting table names: {e}")
             # Continue without table suggestions
-                filtered.append(f"Count rows in {table}")
-        
         return {
             "suggestions": filtered[:8],  # Limit suggestions
             "partial_query": request.partial_query

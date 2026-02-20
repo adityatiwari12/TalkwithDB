@@ -28,7 +28,7 @@ def start_api():
         sys.executable, "-m", "uvicorn",
         "src.chat_sql.api.v3_api:app",
         "--host", "0.0.0.0",
-        "--port", "8000",
+        "--port", "8001",
         "--reload"
     ], cwd=os.path.dirname(__file__))
     
@@ -44,7 +44,7 @@ def start_ui():
     process = subprocess.Popen([
         sys.executable, "-m", "streamlit", "run",
         ui_path,
-        "--server.port", "8501",
+        "--server.port", "8502",
         "--server.headless", "false"
     ], cwd=os.path.dirname(__file__))
     
@@ -89,10 +89,10 @@ def main():
             
         elif args.ui_only:
             ui_process = start_ui()
-            print("\n🌐 UI running at: http://localhost:8501")
+            print("\n🌐 UI running at: http://localhost:8502")
             if not args.no_browser:
                 time.sleep(3)
-                webbrowser.open("http://localhost:8501")
+                webbrowser.open("http://localhost:8502")
             ui_process.wait()
             
         else:
@@ -104,20 +104,20 @@ def main():
             time.sleep(3)
             
             ui_process = start_ui()
-            print("🌐 UI starting at: http://localhost:8501")
+            print("🌐 UI starting at: http://localhost:8502")
             
             if not args.no_browser:
                 time.sleep(3)
-                webbrowser.open("http://localhost:8501")
+                webbrowser.open("http://localhost:8502")
             
             print("""
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║  🎉 Version 3 is now running!                           ║
     ║                                                           ║
-    ║  📡 API: http://localhost:8000                         ║
-    ║  📚 Docs: http://localhost:8000/docs                     ║
-    ║  🌐 UI:  http://localhost:8501                           ║
+    ║  📡 API: http://localhost:8001                         ║
+    ║  📚 Docs: http://localhost:8001/docs                     ║
+    ║  🌐 UI:  http://localhost:8502                           ║
     ║                                                           ║
     ║  Press Ctrl+C to stop                                     ║
     ║                                                           ║
