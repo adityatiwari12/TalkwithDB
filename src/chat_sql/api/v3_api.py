@@ -49,9 +49,8 @@ app.add_middleware(
 
 # Initialize components
 try:
-    from ..rag.retriever import get_schema_retriever
-    schema_retriever = get_schema_retriever()
-    advanced_rag = AdvancedRAGPipeline(schema_retriever.vector_store)
+    # Use the optimized schema retriever's vector store
+    advanced_rag = AdvancedRAGPipeline(optimized_schema_retriever.vector_store)
 except Exception as e:
     logger.error(f"Failed to initialize AdvancedRAGPipeline: {e}")
     # Fallback to simple pipeline
