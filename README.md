@@ -1047,5 +1047,5 @@ graph LR
 
 ---
 
-*TalkWithDB – Engineering Assignment Report | OneClarity Internship Evaluation | February 2026*  
+*TalkWithDB – Chat with SQL Assignment Report | OneClarity Internship Evaluation | 18 - 21 February 2026*  
 *Author: Aditya Tiwari | github.com/adityatiwari12*
