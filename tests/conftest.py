@@ -215,13 +215,13 @@ def mock_external_services(monkeypatch):
     # Mock database connection
     mock_db = Mock()
     mock_db.test_connection.return_value = True
-    monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    monkeypatch.setattr('src.chat_sql.db.connection.DatabaseConnection', Mock(return_value=mock_db))
     
     # Mock Ollama client
     mock_ollama = Mock()
     mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
     mock_ollama.embed.return_value = [0.1] * 768
-    monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+    monkeypatch.setattr('src.chat_sql.rag.embedder.Embedder', Mock(return_value=mock_ollama))
     
     # Mock vector store
     mock_vector_store = Mock()
@@ -230,7 +230,7 @@ def mock_external_services(monkeypatch):
         'table': 'users',
         'columns': ['id', 'name', 'email']
     }
-    monkeypatch.setattr('rag.vector_store.FAISSVectorStore', Mock(return_value=mock_vector_store))
+    monkeypatch.setattr('src.chat_sql.rag.vector_store.VectorStore', Mock(return_value=mock_vector_store))
 
 
 # Test markers

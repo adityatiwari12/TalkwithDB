@@ -21,12 +21,12 @@ def start_api():
     print("🚀 Starting FastAPI Backend...")
     
     # Change to src/chat_sql directory
-    api_path = os.path.join(os.path.dirname(__file__), "src", "chat_sql", "api", "v3_api.py")
+    api_path = os.path.join(os.path.dirname(__file__), "src", "chat_sql", "api", "app.py")
     
     # Start API using uvicorn
     process = subprocess.Popen([
         sys.executable, "-m", "uvicorn",
-        "src.chat_sql.api.v3_api:app",
+        "src.chat_sql.api.app:app",
         "--host", "0.0.0.0",
         "--port", "8001",
         "--reload"
@@ -38,7 +38,7 @@ def start_ui():
     """Start Streamlit UI."""
     print("🎨 Starting Streamlit UI...")
     
-    ui_path = os.path.join(os.path.dirname(__file__), "chat_ui.py")
+    ui_path = os.path.join(os.path.dirname(__file__), "chat_ui_enhanced.py")
     
     # Start Streamlit
     process = subprocess.Popen([

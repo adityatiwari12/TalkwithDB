@@ -1,0 +1,555 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\tiwar\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\tiwar\OneDrive\Desktop\talk_to_db
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-40.4.0, langsmith-0.7.4, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 10 items
+
+tests/unit/test_sql_validator.py::TestSQLValidator::test_select_only_validation ERROR [ 10%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_reject_dml_operations ERROR [ 20%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_sql_injection_detection ERROR [ 30%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_system_table_protection ERROR [ 40%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_query_complexity_validation ERROR [ 50%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_limit_clause_addition ERROR [ 60%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_empty_and_null_queries ERROR [ 70%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_case_insensitive_validation ERROR [ 80%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_comment_detection ERROR [ 90%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_whitespace_and_formatting ERROR [100%]
+
+=================================== ERRORS ====================================
+_______ ERROR at setup of TestSQLValidator.test_select_only_validation ________
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_select_only_validation>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0CFE850>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+Connected to Ollama at http://localhost:11434
+________ ERROR at setup of TestSQLValidator.test_reject_dml_operations ________
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_reject_dml_operations>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F1D350>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+_______ ERROR at setup of TestSQLValidator.test_sql_injection_detection _______
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_sql_injection_detection>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F30490>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+_______ ERROR at setup of TestSQLValidator.test_system_table_protection _______
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_system_table_protection>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0D75310>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+_____ ERROR at setup of TestSQLValidator.test_query_complexity_validation _____
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_query_complexity_validation>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F1F150>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+________ ERROR at setup of TestSQLValidator.test_limit_clause_addition ________
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_limit_clause_addition>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F44310>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+_______ ERROR at setup of TestSQLValidator.test_empty_and_null_queries ________
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_empty_and_null_queries>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F32910>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+_____ ERROR at setup of TestSQLValidator.test_case_insensitive_validation _____
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_case_insensitive_validation>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F0BF90>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+__________ ERROR at setup of TestSQLValidator.test_comment_detection __________
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_comment_detection>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0F2FBD0>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+______ ERROR at setup of TestSQLValidator.test_whitespace_and_formatting ______
+
+obj = <module 'rag.embedder' from 'C:\\Users\\tiwar\\OneDrive\\Desktop\\talk_to_db\\tests\\..\\src\\chat_sql\\rag\\embedder.py'>
+name = 'OllamaEmbedder', ann = 'rag.embedder'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'rag.embedder' has no attribute 'OllamaEmbedder'
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\_pytest\monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+fixturedef = <FixtureDef argname='mock_external_services' scope='function' baseid='tests'>
+request = <SubRequest 'mock_external_services' for <Function test_whitespace_and_formatting>>
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_fixture_setup(fixturedef: FixtureDef, request) -> object | None:
+        asyncio_mode = _get_asyncio_mode(request.config)
+        if not _is_asyncio_fixture_function(fixturedef.func):
+            if asyncio_mode == Mode.STRICT:
+                # Ignore async fixtures without explicit asyncio mark in strict mode
+                # This applies to pytest_trio fixtures, for example
+>               return (yield)
+                        ^^^^^
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pytest_asyncio\plugin.py:728: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000200A0D12B90>
+
+    @pytest.fixture(autouse=True)
+    def mock_external_services(monkeypatch):
+        """Automatically mock external services for all tests."""
+    
+        # Mock database connection
+        mock_db = Mock()
+        mock_db.test_connection.return_value = True
+        monkeypatch.setattr('db.connection.DatabaseConnection', Mock(return_value=mock_db))
+    
+        # Mock Ollama client
+        mock_ollama = Mock()
+        mock_ollama.generate.return_value = {'response': 'SELECT * FROM users LIMIT 200'}
+        mock_ollama.embed.return_value = [0.1] * 768
+>       monkeypatch.setattr('rag.embedder.OllamaEmbedder', Mock(return_value=mock_ollama))
+E       AttributeError: 'module' object at rag.embedder has no attribute 'OllamaEmbedder'
+
+tests\conftest.py:224: AttributeError
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+src\chat_sql\api\app.py:22
+  C:\Users\tiwar\OneDrive\Desktop\talk_to_db\src\chat_sql\api\app.py:22: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatRequest(BaseModel):
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_config.py:383
+  C:\Users\tiwar\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'schema_extra' has been renamed to 'json_schema_extra'
+    warnings.warn(message, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_select_only_validation
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_reject_dml_operations
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_sql_injection_detection
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_system_table_protection
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_query_complexity_validation
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_limit_clause_addition
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_empty_and_null_queries
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_case_insensitive_validation
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_comment_detection
+ERROR tests/unit/test_sql_validator.py::TestSQLValidator::test_whitespace_and_formatting
+======================= 5 warnings, 10 errors in 9.25s ========================

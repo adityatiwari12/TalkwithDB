@@ -1,0 +1,160 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\tiwar\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\tiwar\OneDrive\Desktop\talk_to_db
+configfile: pyproject.toml
+plugins: anyio-4.12.1, Faker-40.4.0, langsmith-0.7.4, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 10 items
+
+tests/unit/test_sql_validator.py::TestSQLValidator::test_select_only_validation PASSED [ 10%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_reject_dml_operations FAILED [ 20%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_sql_injection_detection FAILED [ 30%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_system_table_protection PASSED [ 40%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_query_complexity_validation PASSED [ 50%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_limit_clause_addition PASSED [ 60%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_empty_and_null_queries FAILED [ 70%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_case_insensitive_validation PASSED [ 80%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_comment_detection FAILED [ 90%]
+tests/unit/test_sql_validator.py::TestSQLValidator::test_whitespace_and_formatting PASSED [100%]
+
+================================== FAILURES ===================================
+_________________ TestSQLValidator.test_reject_dml_operations _________________
+
+self = <test_sql_validator.TestSQLValidator object at 0x0000011A9EFA8F90>
+validator = <safety.sql_validator.SQLValidator object at 0x0000011A9F0AD1D0>
+
+    @pytest.mark.unit
+    def test_reject_dml_operations(self, validator):
+        """Test that DML operations are rejected."""
+    
+        # Invalid queries
+        invalid_queries = [
+            "UPDATE users SET name = 'test'",
+            "DELETE FROM users WHERE id = 1",
+            "INSERT INTO users (name) VALUES ('test')",
+            "DROP TABLE users",
+            "CREATE TABLE new_table (id INT)",
+            "ALTER TABLE users ADD COLUMN age INT"
+        ]
+    
+        for query in invalid_queries:
+            result = validator.validate(query)
+            assert not result.is_valid, f"Query should be invalid: {query}"
+>           assert "not allowed" in result.error.lower()
+E           AssertionError: assert 'not allowed' in 'only select queries are allowed'
+E            +  where 'only select queries are allowed' = <built-in method lower of str object at 0x0000011A6602E470>()
+E            +    where <built-in method lower of str object at 0x0000011A6602E470> = 'Only SELECT queries are allowed'.lower
+E            +      where 'Only SELECT queries are allowed' = ValidationResult(is_valid=False, error='Only SELECT queries are allowed', warnings=[], risk_level='HIGH').error
+
+tests\unit\test_sql_validator.py:47: AssertionError
+________________ TestSQLValidator.test_sql_injection_detection ________________
+
+self = <test_sql_validator.TestSQLValidator object at 0x0000011A9EFA96D0>
+validator = <safety.sql_validator.SQLValidator object at 0x0000011A9F0A1150>
+
+    @pytest.mark.unit
+    @pytest.mark.security
+    def test_sql_injection_detection(self, validator):
+        """Test SQL injection pattern detection."""
+    
+        injection_queries = [
+            "SELECT * FROM users WHERE name = 'admin' OR 1=1",
+            "SELECT * FROM users; DROP TABLE users;",
+            "SELECT * FROM users WHERE name = 'test' --",
+            "SELECT * FROM users WHERE name = 'test' #",
+            "SELECT * FROM users UNION SELECT * FROM passwords",
+            "SELECT * FROM users WHERE name = 'admin' UNION SELECT password FROM admin_table"
+        ]
+    
+        for query in injection_queries:
+            result = validator.validate(query)
+>           assert not result.is_valid, f"Injection query should be rejected: {query}"
+E           AssertionError: Injection query should be rejected: SELECT * FROM users WHERE name = 'test' --
+E           assert not True
+E            +  where True = ValidationResult(is_valid=True, error=None, warnings=['Consider adding LIMIT clause to restrict result size'], risk_level='LOW').is_valid
+
+tests\unit\test_sql_validator.py:65: AssertionError
+________________ TestSQLValidator.test_empty_and_null_queries _________________
+
+self = <test_sql_validator.TestSQLValidator object at 0x0000011A9EFAB410>
+validator = <safety.sql_validator.SQLValidator object at 0x0000011A9F15A650>
+
+    @pytest.mark.unit
+    def test_empty_and_null_queries(self, validator):
+        """Test handling of empty and null queries."""
+    
+        invalid_inputs = [
+            "",
+            "   ",
+            None,
+            "SELECT",  # Incomplete query
+            "SELECT * FROM",  # Incomplete query
+        ]
+    
+        for query in invalid_inputs:
+            if query is None:
+                continue  # Skip None for this test
+            result = validator.validate(query)
+>           assert not result.is_valid, f"Empty/invalid query should be rejected: {query}"
+E           AssertionError: Empty/invalid query should be rejected: SELECT
+E           assert not True
+E            +  where True = ValidationResult(is_valid=True, error=None, warnings=['Consider adding LIMIT clause to restrict result size'], risk_level='LOW').is_valid
+
+tests\unit\test_sql_validator.py:136: AssertionError
+___________________ TestSQLValidator.test_comment_detection ___________________
+
+self = <test_sql_validator.TestSQLValidator object at 0x0000011A9EFB42D0>
+validator = <safety.sql_validator.SQLValidator object at 0x0000011A9F14DAD0>
+
+    @pytest.mark.unit
+    def test_comment_detection(self, validator):
+        """Test detection of SQL comments."""
+    
+        comment_queries = [
+            "SELECT * FROM users -- comment",
+            "SELECT * FROM users # comment",
+            "SELECT * FROM users /* comment */",
+            "SELECT * FROM users WHERE name = 'test' -- OR 1=1"
+        ]
+    
+        for query in comment_queries:
+            result = validator.validate(query)
+            # Comments might be allowed or blocked depending on security policy
+            # This test documents the behavior
+            if not result.is_valid:
+>               assert "comment" in result.error.lower()
+E               AssertionError: assert 'comment' in 'potential sql injection pattern detected: potential sql injection pattern detected'
+E                +  where 'potential sql injection pattern detected: potential sql injection pattern detected' = <built-in method lower of str object at 0x0000011A65F56700>()
+E                +    where <built-in method lower of str object at 0x0000011A65F56700> = 'Potential SQL injection pattern detected: Potential SQL injection pattern detected'.lower
+E                +      where 'Potential SQL injection pattern detected: Potential SQL injection pattern detected' = ValidationResult(is_valid=False, error='Potential SQL injection pattern detected: Potential SQL injection pattern detected', warnings=[], risk_level='CRITICAL').error
+
+tests\unit\test_sql_validator.py:169: AssertionError
+============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+src\chat_sql\api\app.py:22
+tests/unit/test_sql_validator.py::TestSQLValidator::test_select_only_validation
+  C:\Users\tiwar\OneDrive\Desktop\talk_to_db\src\chat_sql\api\app.py:22: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ChatRequest(BaseModel):
+
+..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_config.py:383
+tests/unit/test_sql_validator.py::TestSQLValidator::test_select_only_validation
+  C:\Users\tiwar\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'schema_extra' has been renamed to 'json_schema_extra'
+    warnings.warn(message, UserWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/test_sql_validator.py::TestSQLValidator::test_reject_dml_operations
+FAILED tests/unit/test_sql_validator.py::TestSQLValidator::test_sql_injection_detection
+FAILED tests/unit/test_sql_validator.py::TestSQLValidator::test_empty_and_null_queries
+FAILED tests/unit/test_sql_validator.py::TestSQLValidator::test_comment_detection
+================== 4 failed, 6 passed, 7 warnings in 12.99s ===================

@@ -16,8 +16,9 @@ from chat_sql.config import config
 class ValidationResult:
     """Result of SQL validation."""
     is_valid: bool
-    error_message: Optional[str] = None
+    error: Optional[str] = None
     warnings: List[str] = None
+    risk_level: str = "LOW"
     
     def __post_init__(self):
         if self.warnings is None:
@@ -39,11 +40,16 @@ class SQLValidator:
         # Potentially dangerous patterns
         self.dangerous_patterns = [
             r';\s*(DROP|DELETE|UPDATE|INSERT)',  # Multiple statements
-            r'--.*?(DROP|DELETE|UPDATE|INSERT)',  # SQL injection via comments
-            r'/\*.*?(DROP|DELETE|UPDATE|INSERT).*?\*/',  # SQL injection via block comments
             r'xp_cmdshell',  # SQL Server command execution
             r'sp_executesql',  # Dynamic SQL execution
             r'exec\s*\(',  # Function execution
+        ]
+        
+        # Comment patterns
+        self.comment_patterns = [
+            (r'--', 'SQL comment (--)'),
+            (r'#', 'SQL comment (#)'),
+            (r'/\*.*?\*/', 'Block comment (/* */)')
         ]
         
         # System tables that should not be accessed
@@ -52,6 +58,10 @@ class SQLValidator:
             'sqlite_sequence', 'sqlite_stat'
         ]
     
+    def validate(self, sql_query: str) -> ValidationResult:
+        """Alias for validate_sql to support tests."""
+        return self.validate_sql(sql_query)
+
     def validate_sql(self, sql_query: str) -> ValidationResult:
         """
         Validate SQL query for safety.
@@ -73,14 +83,24 @@ class SQLValidator:
         
         # Check if it starts with SELECT
         if not normalized_sql.startswith('SELECT'):
-            return ValidationResult(False, "Only SELECT queries are allowed")
+            return ValidationResult(False, "Only SELECT queries are allowed. DML operations are not allowed.", risk_level="HIGH")
         
+        # Check for minimum completeness
+        if normalized_sql == 'SELECT' or ' FROM ' not in normalized_sql:
+            return ValidationResult(False, "Incomplete SELECT query. Only SELECT queries with FROM clause are allowed.", risk_level="HIGH")
+
+        # Check for comments
+        for pattern, desc in self.comment_patterns:
+            if re.search(pattern, sql_query):
+                return ValidationResult(False, f"Comment detected: {desc}. Comments are not allowed for security reasons.", risk_level="HIGH")
+
         # Check for forbidden keywords
         forbidden_found = self._check_forbidden_keywords(normalized_sql)
         if forbidden_found:
             return ValidationResult(
                 False, 
-                f"Forbidden keyword detected: {forbidden_found}"
+                f"Forbidden keyword detected: {forbidden_found}. DML operations are not allowed.",
+                risk_level="HIGH"
             )
         
         # Check for dangerous patterns
@@ -88,23 +108,41 @@ class SQLValidator:
         if dangerous_found:
             return ValidationResult(
                 False,
-                f"Dangerous pattern detected: {dangerous_found}"
+                f"Dangerous pattern detected: {dangerous_found}. This operation is not allowed.",
+                risk_level="CRITICAL"
             )
         
         # Check for system table access
         system_table_warning = self._check_system_tables(normalized_sql)
         if system_table_warning:
-            warnings.append(system_table_warning)
+            return ValidationResult(
+                False,
+                f"System table access is not allowed. {system_table_warning}",
+                risk_level="HIGH"
+            )
+        
+        # Check for potential SQL injection patterns
+        injection_warning = self._check_sql_injection(normalized_sql)
+        if injection_warning:
+            return ValidationResult(
+                False,
+                f"Potential SQL injection pattern detected: {injection_warning}",
+                risk_level="CRITICAL"
+            )
+
+        # Check for query complexity (joins)
+        join_count = normalized_sql.count(' JOIN ')
+        if join_count > 5:
+            return ValidationResult(
+                False,
+                f"Query is too complex: {join_count} JOINs detected. Limit is 5.",
+                risk_level="MEDIUM"
+            )
         
         # Check for LIMIT clause (recommend but not require)
         limit_warning = self._check_limit_clause(normalized_sql)
         if limit_warning:
             warnings.append(limit_warning)
-        
-        # Check for potential SQL injection patterns
-        injection_warning = self._check_sql_injection(normalized_sql)
-        if injection_warning:
-            warnings.append(injection_warning)
         
         return ValidationResult(True, None, warnings)
     
