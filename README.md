@@ -1,7 +1,7 @@
-# Talk with DB - Version 3.2 🚀 
+# Talk with DB - Version 3.2 🚀 (Building Phase)
 
 
-"Talk with DB" is a cutting-edge enterprise solution that leverages **Advanced Retrieval-Augmented Generation (RAG)** to transform natural language into complex, precise SQL queries. Version 3.1 marks the transition from a research prototype to a production-ready system with a professional UI, robust error handling, and a sophisticated search architecture.
+"Talk with DB" is a solution that leverages **Advanced Retrieval-Augmented Generation (RAG)** to transform natural language into complex, precise SQL queries. Version 3.1 marks the transition from a research prototype to a production-ready system with a professional UI, robust error handling, and a sophisticated search architecture.
 
 ---
 
