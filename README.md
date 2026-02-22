@@ -1,7 +1,12 @@
-# Talk with DB - Version 3.1 🚀 
+# Talk with DB - Version 3.2 🚀 
 
 
 "Talk with DB" is a cutting-edge enterprise solution that leverages **Advanced Retrieval-Augmented Generation (RAG)** to transform natural language into complex, precise SQL queries. Version 3.1 marks the transition from a research prototype to a production-ready system with a professional UI, robust error handling, and a sophisticated search architecture.
+
+---
+
+## 📋 **Assignment Report**
+For a comprehensive technical deep-dive into the development, challenges, and architectural evolution of this project, please refer to the **[ASSIGNMENT_REPORT.md](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/ASSIGNMENT_REPORT.md)**.
 
 ---
 
@@ -147,4 +152,4 @@ python chat_v3.py
 ---
 
 Made with ❤️ by [Aditya Tiwari](https://github.com/adityatiwari12)
-*Enterprise Technical Manual • Version 3.1 • 2026*
+*Enterprise Technical Manual • Version 3.2 • 2026*
