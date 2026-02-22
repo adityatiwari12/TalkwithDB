@@ -47,7 +47,7 @@ class OptimizedChatWithSQLPipeline:
         
         # Performance tracking
         self.query_count = 0
-        self.total_response_time = 0
+        self.total_response_time: float = 0.0
         
         logger.info("Optimized Chat with SQL pipeline created")
     
@@ -92,14 +92,14 @@ class OptimizedChatWithSQLPipeline:
             validation_time = time.time() - validation_start
             
             if not validation_result.is_valid:
-                logger.error(f"SQL validation failed: {validation_result.error_message}")
+                logger.error(f"SQL validation failed: {validation_result.error}")
                 return {
-                    'answer': f"Cannot execute query due to safety restrictions: {validation_result.error_message}",
+                    'answer': f"Cannot execute query due to safety restrictions: {validation_result.error}",
                     'sql': sql_query,
                     'explanation': sql_explanation,
                     'results': [],
                     'warnings': [],
-                    'error': validation_result.error_message,
+                    'error': validation_result.error,
                     'performance': {
                         'schema_time_ms': schema_time * 1000,
                         'sql_time_ms': sql_time * 1000,
