@@ -1,5 +1,5 @@
 # TalkWithDB – Scalable Chat-with-SQL using RAG
-## Engineering Assignment Report
+## Assignment Report
 
 **Submission for**: OneClarity Internship Evaluation  
 **Project**: TalkWithDB – Natural Language Interface over PostgreSQL using Retrieval-Augmented Generation  
