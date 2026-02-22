@@ -10,6 +10,25 @@ For a comprehensive technical deep-dive into the development, challenges, and ar
 
 ---
 
+## 🚧 **Current Development & Roadmap (Version 3.2)**
+
+### **What I'm Working On**
+- Finalizing the **Version 3.2** stabilization phase for enterprise deployment.
+- Strengthening the **Unit Testing Suite** to ensure 100% coverage of safety guardrails.
+- Refining the **Orchestration Layer** (`chat_v3.py`) for better process management and error recovery.
+
+### **Current Issues & Resolved Bottlenecks**
+- **Testing Infrastructure**: Fixed critical `ImportError` issues in the test suite by standardizing absolute path mocking in `tests/conftest.py`.
+- **Path Misalignments**: Resolved discrepancies between the orchestrator script and the actual API/UI filenames (`app.py` vs `v3_api.py`).
+- **SQL Validator Logic**: Patched vulnerabilities where SQL comments and incomplete queries could bypass the safety engine.
+
+### **Planned Improvements**
+- **Advanced Guardrails**: Implementing a multi-tier risk scoring system for incoming SQL queries.
+- **Enhanced Observability**: Adding real-time performance telemetry for the RAG retrieval stages.
+- **UI Responsiveness**: Optimizing Streamlit state management for faster interaction cycles.
+
+---
+
 ## 📸 **System in Action: Visual Showcase**
 ![Screenshot](docs/assets/screenshots/Screenshot1.jpg)
 ![Screenshot](docs/assets/screenshots/Screenshot2.jpg)
