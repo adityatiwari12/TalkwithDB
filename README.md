@@ -5,9 +5,6 @@
 
 ---
 
-## 📋 **Assignment Report**
-For a comprehensive technical deep-dive into the development, challenges, and architectural evolution of this project, please refer to the **[ASSIGNMENT_REPORT.md](file:///c:/Users/tiwar/OneDrive/Desktop/talk_to_db/ASSIGNMENT_REPORT.md)**.
-
 ---
 
 ## 🚧 **Current Development & Roadmap (Version 3.2)**
