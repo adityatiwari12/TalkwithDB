@@ -185,14 +185,55 @@ class DesktopQueryPipeline:
 
         return None
 
+    def _deterministic_count_sql(self, question: str) -> Optional[str]:
+        """
+        Return deterministic COUNT SQL for explicit count intents.
+
+        This avoids unnecessary LLM ambiguity for common questions like:
+        - "how many users"
+        - "number of projects"
+        - "count of completed tasks"
+        """
+        q = question.lower()
+        if not (("how many" in q) or ("number of" in q) or ("count" in q)):
+            return None
+
+        # Optional task status constraint.
+        task_status = None
+        for status in ["pending", "in_progress", "completed", "blocked", "cancelled"]:
+            if status in q:
+                task_status = status
+                break
+
+        # Entity routing.
+        if re.search(r"\buser(s)?\b", q):
+            return "SELECT COUNT(*) AS total_users FROM users"
+        if re.search(r"\bproject(s)?\b", q):
+            return "SELECT COUNT(*) AS total_projects FROM projects"
+        if re.search(r"\btask(s)?\b", q):
+            if task_status:
+                return (
+                    "SELECT COUNT(*) AS total_tasks "
+                    f"FROM tasks WHERE status = '{task_status}'"
+                )
+            return "SELECT COUNT(*) AS total_tasks FROM tasks"
+
+        return None
+
     def run(self, question: str, db: PostgresConnectionConfig) -> DesktopQueryResult:
         try:
+            intent = self._infer_intent(question)
+            deterministic_sql = self._deterministic_count_sql(question)
+
             schema_context = build_schema_context(db)
-            generated = self.sql_generator.generate_sql(
-                question=question.strip(),
-                schema_context=schema_context,
-            )
-            sql_query = (generated.get("sql") or "").strip()
+            if deterministic_sql:
+                sql_query = deterministic_sql
+            else:
+                generated = self.sql_generator.generate_sql(
+                    question=question.strip(),
+                    schema_context=schema_context,
+                )
+                sql_query = (generated.get("sql") or "").strip()
 
             validation = self.sql_validator.validate_sql(sql_query)
             if not validation.is_valid:
@@ -202,14 +243,13 @@ class DesktopQueryPipeline:
                     answer="The query was blocked for safety.",
                     explanation="Generated SQL did not pass validation rules.",
                     insight="Try rephrasing with clearer table/column intent.",
-                    intent=self._infer_intent(question),
+                    intent=intent,
                     warnings=validation.warnings,
                     error=validation.error_message or "Validation failed",
                 )
 
             safe_sql = self.sql_validator.sanitize_sql(sql_query)
             rows = self._execute_select(db=db, sql_query=safe_sql)
-            intent = self._infer_intent(question)
             supplementary_queries: list[str] = []
             total_count: Optional[int] = None
             diagnostic_rows: List[Dict[str, Any]] = []
@@ -252,9 +292,19 @@ class DesktopQueryPipeline:
                 results=rows,
             )
             explanation = (
-                "Interpreted your intent, generated SQL with schema context, "
-                "validated it for read-only safety, then executed it as the primary query."
+                "Interpreted your intent, validated SQL for read-only safety, "
+                "and executed it as the primary query."
             )
+            if deterministic_sql:
+                explanation = (
+                    "Detected an explicit count request and used a deterministic COUNT query, "
+                    "then validated and executed it safely."
+                )
+            else:
+                explanation = (
+                    "Interpreted your intent, generated SQL with schema context, "
+                    "validated it for read-only safety, then executed it as the primary query."
+                )
             if total_count is not None:
                 explanation += (
                     " I then ran a supplementary COUNT query on the same logic "

@@ -43,6 +43,10 @@ def build_schema_context(config: PostgresConnectionConfig, max_tables: int = 12)
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
             for table in tables:
                 cursor.execute(
+                    f"SELECT COUNT(*) AS row_count FROM {table}"
+                )
+                row_count = cursor.fetchone()["row_count"]
+                cursor.execute(
                     """
                     SELECT column_name, data_type
                     FROM information_schema.columns
@@ -54,7 +58,35 @@ def build_schema_context(config: PostgresConnectionConfig, max_tables: int = 12)
                 )
                 columns = cursor.fetchall()
                 col_desc = ", ".join(f"{c['column_name']} ({c['data_type']})" for c in columns)
-                chunks.append(f"Table: {table}\nColumns: {col_desc}")
+                cursor.execute(
+                    """
+                    SELECT
+                        kcu.column_name,
+                        ccu.table_name AS ref_table,
+                        ccu.column_name AS ref_column
+                    FROM information_schema.table_constraints AS tc
+                    JOIN information_schema.key_column_usage AS kcu
+                        ON tc.constraint_name = kcu.constraint_name
+                        AND tc.table_schema = kcu.table_schema
+                    JOIN information_schema.constraint_column_usage AS ccu
+                        ON ccu.constraint_name = tc.constraint_name
+                        AND ccu.table_schema = tc.table_schema
+                    WHERE tc.constraint_type = 'FOREIGN KEY'
+                      AND tc.table_schema = 'public'
+                      AND tc.table_name = %s
+                    """,
+                    (table,),
+                )
+                fk_rows = cursor.fetchall()
+                fk_desc = ", ".join(
+                    f"{r['column_name']} -> {r['ref_table']}.{r['ref_column']}" for r in fk_rows
+                ) if fk_rows else "None"
+                chunks.append(
+                    f"Table: {table}\n"
+                    f"Approx rows: {row_count}\n"
+                    f"Columns: {col_desc}\n"
+                    f"Foreign keys: {fk_desc}"
+                )
         return "\n\n".join(chunks)
     finally:
         conn.close()

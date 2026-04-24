@@ -52,46 +52,46 @@
     },
     "projects": {
       "table_name": "projects",
-      "text": "Table: projects\nDescription: Table with 5 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- description (text)\n- created_at (timestamp without time zone)\n",
+      "text": "Table: projects\nDescription: Table with 250 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- description (text)\n- created_at (timestamp without time zone)\n",
       "metadata": {
         "table_name": "projects",
         "document_type": "table_schema",
-        "updated_at": "2026-02-19T23:54:40.945188"
+        "updated_at": "2026-04-24T22:56:26.901261"
       },
-      "checksum": "841d629ce127a354ed5f080d608ff9ac"
+      "checksum": "fba8d810804781c05fd3a77e89dc4591"
     },
     "tasks": {
       "table_name": "tasks",
-      "text": "Table: tasks\nDescription: Table with 24 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- title (character varying)\n- status (character varying)\n- assigned_to (integer) [FOREIGN KEY -> users.id]\n- project_id (integer) [FOREIGN KEY -> projects.id]\n- created_at (timestamp without time zone)\n- due_date (date)\n",
+      "text": "Table: tasks\nDescription: Table with 12000 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- title (character varying)\n- status (character varying)\n- assigned_to (integer) [FOREIGN KEY -> users.id]\n- project_id (integer) [FOREIGN KEY -> projects.id]\n- created_at (timestamp without time zone)\n- due_date (date)\n",
       "metadata": {
         "table_name": "tasks",
         "document_type": "table_schema",
-        "updated_at": "2026-02-19T23:54:43.054284"
+        "updated_at": "2026-04-24T22:56:29.005478"
       },
-      "checksum": "3a99ef84b998538531d0331fdb1f7dd5"
+      "checksum": "6d723d6977eb16c1c688961b117a5012"
     },
     "users": {
       "table_name": "users",
-      "text": "Table: users\nDescription: Table with 5 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- email (character varying)\n- created_at (timestamp without time zone)\n",
+      "text": "Table: users\nDescription: Table with 1200 rows\nColumns:\n- id (integer) [PRIMARY KEY]\n- name (character varying)\n- email (character varying)\n- created_at (timestamp without time zone)\n",
       "metadata": {
         "table_name": "users",
         "document_type": "table_schema",
-        "updated_at": "2026-02-19T23:54:45.170403"
+        "updated_at": "2026-04-24T22:56:31.063007"
       },
-      "checksum": "79ca068f1abc3661caed7d80737702e8"
+      "checksum": "71fa5be39672f6100764b0dcf403cd20"
     },
     "query_cache": {
       "table_name": "query_cache",
-      "text": "Table: query_cache\nDescription: Table with 3 rows\nColumns:\n- cache_key (character varying) [PRIMARY KEY]\n- normalized_question (text)\n- max_tables (integer)\n- response (text)\n- sql_query (text)\n- results (jsonb)\n- metadata (jsonb)\n- hit_count (integer)\n- created_at (timestamp without time zone)\n- last_used_at (timestamp without time zone)\n",
+      "text": "Table: query_cache\nDescription: Table with 5 rows\nColumns:\n- cache_key (character varying) [PRIMARY KEY]\n- normalized_question (text)\n- max_tables (integer)\n- response (text)\n- sql_query (text)\n- results (jsonb)\n- metadata (jsonb)\n- hit_count (integer)\n- created_at (timestamp without time zone)\n- last_used_at (timestamp without time zone)\n",
       "metadata": {
         "table_name": "query_cache",
         "document_type": "table_schema",
-        "updated_at": "2026-04-24T17:14:57.919070"
+        "updated_at": "2026-04-24T18:35:55.817384"
       },
-      "checksum": "755616913e9dc711a8eccb5a6d3041cb"
+      "checksum": "4142900f4d1d1943984c0de8db55078f"
     }
   },
   "dimension": 768,
   "total_tables": 9,
-  "last_updated": "2026-04-24T17:14:57.927059"
+  "last_updated": "2026-04-24T22:56:31.065763"
 }

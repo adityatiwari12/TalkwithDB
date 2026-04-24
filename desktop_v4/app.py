@@ -1,9 +1,11 @@
-"""TalkWithDB Version 4 desktop chat application."""
+"""TalkWithDB Version 5 desktop chat application."""
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
+from typing import Any, Optional
+
 import flet as ft
 
 from desktop_v4.services.connection_service import (
@@ -24,78 +26,103 @@ STARTER_QUESTIONS = [
 
 
 def main(page: ft.Page) -> None:
-    page.title = "TalkWithDB Desktop v4"
+    page.title = "TalkWithDB Desktop"
     page.theme_mode = ft.ThemeMode.DARK
-    page.window_width = 1380
-    page.window_height = 900
-    page.bgcolor = "#090B16"
-    page.padding = 14
-
-    host = ft.TextField(label="Host", value="localhost", dense=True)
-    port = ft.TextField(label="Port", value="5432", dense=True, width=100)
-    database = ft.TextField(label="Database", value="chatdb", dense=True)
-    user = ft.TextField(label="User", value="postgres", dense=True)
-    password = ft.TextField(label="Password", password=True, can_reveal_password=True, dense=True)
+    page.window_width = 1440
+    page.window_height = 920
+    page.bgcolor = "#0A0F1F"
+    page.padding = 10
 
     history = HistoryService()
     pipeline = DesktopQueryPipeline()
-    active_cfg: PostgresConnectionConfig | None = None
+
+    active_cfg: Optional[PostgresConnectionConfig] = None
     active_session_id = history.create_startup_session()
     is_processing = False
     active_request_id = 0
-    session_list = ft.Column(spacing=8, scroll=ft.ScrollMode.ALWAYS, expand=True)
-    chat_feed = ft.Column(spacing=14, scroll=ft.ScrollMode.ALWAYS, expand=True)
-    starter_wrap = ft.Wrap(spacing=8, run_spacing=8, visible=True)
-    status = ft.Text("Database disconnected", color=ft.Colors.AMBER_300, size=12)
-    model_badge = ft.Container(
-        content=ft.Text(f"Model: {pipeline.model}", size=11, color="#D5D8FF"),
-        bgcolor="#1A2040",
-        padding=ft.padding.symmetric(horizontal=12, vertical=8),
-        border_radius=16,
-    )
+    details_visible = True
+
+    # Right panel details state
+    details_sql = ft.Text("", size=12, color="#C9D3FF", selectable=True)
+    details_meta = ft.Text("No query executed yet.", size=12, color="#9BA7D9", selectable=True)
+    details_cached = ft.Text("", size=11, color="#7FA8FF")
+
+    # Connection controls (settings modal)
+    host = ft.TextField(label="Host", value="localhost", dense=True)
+    port = ft.TextField(label="Port", value="5432", dense=True, width=120)
+    database = ft.TextField(label="Database", value="chatdb", dense=True)
+    user = ft.TextField(label="User", value="postgres", dense=True)
+    password = ft.TextField(label="Password", password=True, can_reveal_password=True, dense=True)
+    status = ft.Text("DB disconnected", color="#D4A52F", size=12)
+
+    session_list = ft.Column(spacing=6, scroll=ft.ScrollMode.ALWAYS, expand=True)
+    chat_feed = ft.Column(spacing=10, scroll=ft.ScrollMode.ALWAYS, expand=True)
+    starter_wrap = ft.Column(spacing=6, visible=True)
+
     prompt = ft.TextField(
-        hint_text="Message TalkWithDB...",
+        hint_text="Ask your database...",
         disabled=True,
         expand=True,
-        border_color="#2B356B",
-        focused_border_color="#4E63FF",
-        bgcolor="#141932",
         shift_enter=True,
+        border_color="#2C3D73",
+        focused_border_color="#5B75FF",
+        bgcolor="#101733",
+        dense=True,
     )
-    send_btn = ft.ElevatedButton("Ask", disabled=True)
-    send_btn.style = ft.ButtonStyle(
-        bgcolor="#4E63FF",
-        color=ft.Colors.WHITE,
-        shape=ft.RoundedRectangleBorder(radius=12),
+    send_btn = ft.ElevatedButton(
+        "Send",
+        disabled=True,
+        style=ft.ButtonStyle(
+            bgcolor="#4C67FF",
+            color=ft.Colors.WHITE,
+            shape=ft.RoundedRectangleBorder(radius=10),
+        ),
     )
 
-    def assistant_card(label: str, value: str) -> ft.Container:
-        return ft.Container(
-            content=ft.Column(
-                [
-                    ft.Text(label, size=11, color="#8C95C3", weight=ft.FontWeight.W_600),
-                    ft.Text(value or "-", size=13, color="#E7EAFF", selectable=True),
-                ],
-                spacing=6,
-            ),
-            padding=12,
-            border_radius=14,
-            bgcolor="#151B37",
-            border=ft.border.all(1, "#252E58"),
-        )
-
-    def user_bubble(text: str) -> ft.Row:
-        return ft.Row(
+    details_panel = ft.Container(
+        width=340,
+        padding=12,
+        border_radius=10,
+        bgcolor="#0D152E",
+        border=ft.border.all(1, "#1F2B54"),
+        visible=details_visible,
+        content=ft.Column(
             [
+                ft.Text("Details", size=14, weight=ft.FontWeight.BOLD, color="#E6EBFF"),
+                ft.Divider(color="#1A2445"),
+                ft.Text("Database Connection", size=12, color="#AAB6E8"),
+                host,
+                ft.Row([port, user]),
+                database,
+                password,
+                ft.Row(
+                    [
+                        ft.ElevatedButton("Test & Connect", on_click=lambda e: on_connect(e)),
+                        ft.IconButton(
+                            ft.Icons.SETTINGS,
+                            tooltip="Open settings modal",
+                            on_click=lambda e: open_settings(e),
+                        ),
+                    ]
+                ),
+                status,
+                details_cached,
+                ft.Divider(color="#1A2445"),
+                ft.Text("SQL", size=12, color="#AAB6E8"),
                 ft.Container(
-                    content=ft.Text(text, size=13, color=ft.Colors.WHITE),
-                    bgcolor="#3A4FD9",
-                    padding=12,
-                    border_radius=14,
-                )
+                    content=details_sql,
+                    padding=8,
+                    border_radius=8,
+                    bgcolor="#0A1126",
+                    border=ft.border.all(1, "#1A2A52"),
+                ),
+                ft.Divider(color="#1A2445"),
+                ft.Text("Metadata", size=12, color="#AAB6E8"),
+                details_meta,
             ],
-            alignment=ft.MainAxisAlignment.END,
-        )
+            spacing=8,
+        ),
+    )
 
     def _cache_key(question: str, cfg: PostgresConnectionConfig) -> str:
         normalized = " ".join(question.strip().lower().split())
@@ -105,12 +132,6 @@ def main(page: ft.Page) -> None:
     def has_user_messages(session_id: str) -> bool:
         return any(m.role == "user" for m in history.get_messages(session_id))
 
-    def handle_starter_click(text: str) -> None:
-        if is_processing:
-            return
-        prompt.value = text
-        on_ask(None)
-
     def render_starters() -> None:
         starter_wrap.controls.clear()
         if has_user_messages(active_session_id):
@@ -119,41 +140,59 @@ def main(page: ft.Page) -> None:
         starter_wrap.visible = True
         for question in STARTER_QUESTIONS:
             starter_wrap.controls.append(
-                ft.OutlinedButton(
-                    text=question,
+                ft.ElevatedButton(
+                    question,
                     on_click=lambda _, q=question: handle_starter_click(q),
                     style=ft.ButtonStyle(
-                        color="#CFD5FF",
-                        side=ft.BorderSide(1, "#2A356C"),
-                        shape=ft.RoundedRectangleBorder(radius=16),
+                        color="#D6DEFF",
+                        bgcolor="#101933",
+                        side=ft.BorderSide(1, "#2B3F77"),
+                        shape=ft.RoundedRectangleBorder(radius=10),
                     ),
                 )
             )
+
+    def user_bubble(text: str) -> ft.Row:
+        return ft.Row(
+            [
+                ft.Container(
+                    content=ft.Text(text, size=13, color=ft.Colors.WHITE),
+                    bgcolor="#3E5AE0",
+                    padding=10,
+                    border_radius=10,
+                )
+            ],
+            alignment=ft.MainAxisAlignment.END,
+        )
+
+    def assistant_message(answer: str, explanation: str, insight: str) -> ft.Container:
+        body = [ft.Text(answer, size=15, weight=ft.FontWeight.W_600, color="#EEF2FF")]
+        if explanation.strip():
+            body.append(ft.Text(explanation, size=12, color="#C7D0F5"))
+        if insight.strip():
+            body.append(ft.Text(insight, size=11, color="#8C9ACF"))
+        return ft.Container(
+            content=ft.Column(body, spacing=6),
+            padding=10,
+            border_radius=10,
+            bgcolor="#121B38",
+            border=ft.border.all(1, "#23315E"),
+            ink=True,
+        )
 
     def render_chat() -> None:
         chat_feed.controls.clear()
         for item in history.get_messages(active_session_id):
             if item.role == "user":
                 chat_feed.controls.append(user_bubble(item.content))
-                continue
-
-            cards = [
-                assistant_card("Answer", item.answer),
-                assistant_card("Explanation", item.explanation),
-                assistant_card("Insight", item.insight),
-            ]
-            body: list[ft.Control] = cards
-            if item.sql_query:
-                body.append(
-                    ft.Container(
-                        content=ft.Text(f"SQL:\n{item.sql_query}", selectable=True, color="#C6CDF7", size=12),
-                        bgcolor="#111731",
-                        border_radius=12,
-                        padding=10,
-                        border=ft.border.all(1, "#222B55"),
+            else:
+                chat_feed.controls.append(
+                    assistant_message(
+                        answer=item.answer or "",
+                        explanation=item.explanation or "",
+                        insight=item.insight or "",
                     )
                 )
-            chat_feed.controls.append(ft.Column(body, spacing=8))
         render_starters()
 
     def render_sessions() -> None:
@@ -162,14 +201,48 @@ def main(page: ft.Page) -> None:
             is_active = rec.session_id == active_session_id
             session_list.controls.append(
                 ft.Container(
-                    content=ft.Text(rec.title, size=12, color="#F3F5FF" if is_active else "#A8AFD9"),
-                    padding=10,
-                    border_radius=10,
-                    bgcolor="#212C62" if is_active else "#111834",
-                    border=ft.border.all(1, "#2D3B79" if is_active else "#1A2246"),
+                    content=ft.Row(
+                        [
+                            ft.Text(
+                                rec.title,
+                                size=12,
+                                color="#EFF3FF" if is_active else "#A3AFDA",
+                                expand=True,
+                                no_wrap=True,
+                                overflow=ft.TextOverflow.ELLIPSIS,
+                            ),
+                            ft.IconButton(
+                                ft.Icons.DELETE_OUTLINE,
+                                icon_size=14,
+                                icon_color="#8E9ACB",
+                                tooltip="Delete chat",
+                                on_click=lambda _, sid=rec.session_id: delete_session(sid),
+                            ),
+                        ],
+                        spacing=4,
+                    ),
+                    padding=8,
+                    border_radius=8,
+                    bgcolor="#1D2A59" if is_active else "#0F1733",
+                    border=ft.border.all(1, "#2C3E79" if is_active else "#1A2448"),
                     on_click=lambda _, sid=rec.session_id: switch_session(sid),
+                    ink=True,
                 )
             )
+
+    def delete_session(session_id: str) -> None:
+        nonlocal active_session_id
+        if is_processing:
+            return
+        history.delete_session(session_id)
+        sessions = history.list_sessions()
+        if not sessions:
+            active_session_id = history.create_session("New chat")
+        elif active_session_id == session_id:
+            active_session_id = sessions[0].session_id
+        render_sessions()
+        render_chat()
+        page.update()
 
     def switch_session(session_id: str) -> None:
         nonlocal active_session_id
@@ -178,14 +251,25 @@ def main(page: ft.Page) -> None:
         render_chat()
         page.update()
 
-    def create_new_session(_: ft.ControlEvent) -> None:
+    def create_new_session(_: Any = None) -> None:
         nonlocal active_session_id
+        if is_processing:
+            return
         active_session_id = history.create_session("New chat")
         render_sessions()
         render_chat()
         page.update()
 
-    def on_connect(_: ft.ControlEvent) -> None:
+    def open_settings(_: Any = None) -> None:
+        settings_dialog.open = True
+        page.dialog = settings_dialog
+        page.update()
+
+    def close_settings(_: Any = None) -> None:
+        settings_dialog.open = False
+        page.update()
+
+    def on_connect(_: Any = None) -> None:
         nonlocal active_cfg
         try:
             cfg = PostgresConnectionConfig(
@@ -197,92 +281,70 @@ def main(page: ft.Page) -> None:
             )
         except ValueError:
             status.value = "Invalid port"
-            status.color = ft.Colors.RED_300
+            status.color = "#FF7A7A"
             page.update()
             return
 
         ok, error = test_postgres_connection(cfg)
         if ok:
             active_cfg = cfg
-            status.value = f"Connected to {cfg.database} @ {cfg.host}:{cfg.port}"
-            status.color = ft.Colors.GREEN_300
+            status.value = f"Connected: {cfg.database} @ {cfg.host}:{cfg.port}"
+            status.color = "#79D88A"
             prompt.disabled = False
             send_btn.disabled = False
         else:
             active_cfg = None
-            status.value = "Connection failed"
-            status.color = ft.Colors.RED_300
-            history.add_message(
-                active_session_id,
-                role="assistant",
-                content="",
-                answer=f"Connection failed: {error}",
-                explanation="The desktop client could not establish a DB session.",
-                insight="Verify host, port, credentials, and database name.",
-                intent="connection",
-            )
+            status.value = f"Connection failed: {error}"
+            status.color = "#FF7A7A"
             prompt.disabled = True
             send_btn.disabled = True
-            render_chat()
         page.update()
 
-    def on_ask(_: ft.ControlEvent) -> None:
-        nonlocal is_processing
-        nonlocal active_request_id
+    def handle_starter_click(text: str) -> None:
         if is_processing:
             return
-        if not active_cfg:
-            history.add_message(
-                active_session_id,
-                role="assistant",
-                content="",
-                answer="Connect to a database first.",
-                explanation="No active database connection is available.",
-                insight="Use the sidebar connection panel and click Test & Connect.",
-                intent="connection",
-            )
-            render_chat()
+        prompt.value = text
+        on_ask(None)
+
+    async def typewriter_render(text_control: ft.Text, text: str) -> None:
+        text_control.value = ""
+        for idx in range(1, len(text) + 1, 7):
+            text_control.value = text[:idx]
             page.update()
+            await asyncio.sleep(0.01)
+        text_control.value = text
+
+    def on_ask(_: Any = None) -> None:
+        nonlocal is_processing
+        nonlocal active_request_id
+
+        if is_processing or not prompt.value.strip():
             return
-        if not prompt.value.strip():
+        if not active_cfg:
+            status.value = "Connect database from Settings first."
+            status.color = "#FF7A7A"
             page.update()
             return
 
         question = prompt.value.strip()
-        history.add_message(active_session_id, role="user", content=question)
         prompt.value = ""
+        history.add_message(active_session_id, role="user", content=question)
         chat_feed.controls.append(user_bubble(question))
         starter_wrap.visible = False
-        answer_text = ft.Text("Thinking...", size=13, color="#E7EAFF")
-        explanation_text = ft.Text(
-            "Interpreting intent, generating SQL, validating safety, and executing query...",
-            size=13,
-            color="#E7EAFF",
-        )
-        insight_text = ft.Text("Preparing insight...", size=13, color="#E7EAFF")
-        sql_text = ft.Text("", selectable=True, color="#C6CDF7", size=12, visible=False)
-        sql_container = ft.Container(
-            content=sql_text,
-            bgcolor="#111731",
-            border_radius=12,
+
+        # Single unified assistant placeholder
+        answer_text = ft.Text("Thinking.", size=15, weight=ft.FontWeight.W_600, color="#EEF2FF")
+        explanation_text = ft.Text("", size=12, color="#C7D0F5")
+        insight_text = ft.Text("", size=11, color="#8C9ACF")
+        assistant_block = ft.Container(
+            content=ft.Column([answer_text, explanation_text, insight_text], spacing=6),
             padding=10,
-            border=ft.border.all(1, "#222B55"),
-            visible=False,
+            border_radius=10,
+            bgcolor="#121B38",
+            border=ft.border.all(1, "#23315E"),
         )
-        assistant_block = ft.Column(
-            [
-                assistant_card("Answer", ""),
-                assistant_card("Explanation", ""),
-                assistant_card("Insight", ""),
-                sql_container,
-            ],
-            spacing=8,
-        )
-        # Replace placeholder card content with dynamic controls
-        assistant_block.controls[0].content.controls[1] = answer_text
-        assistant_block.controls[1].content.controls[1] = explanation_text
-        assistant_block.controls[2].content.controls[1] = insight_text
         chat_feed.controls.append(assistant_block)
+
         is_processing = True
         active_request_id += 1
         request_id = active_request_id
@@ -294,48 +356,41 @@ def main(page: ft.Page) -> None:
             dots = 0
             while is_processing and request_id == active_request_id:
                 dots = (dots % 3) + 1
-                answer_text.value = f"Thinking{'.' * dots}"
+                answer_text.value = "Thinking" + ("." * dots)
                 page.update()
                 await asyncio.sleep(0.28)
-
-        page.run_task(animate_loader)
 
         async def run_pipeline_async() -> None:
             nonlocal is_processing
             cache_key = _cache_key(question, active_cfg)
             cached = history.get_cached_response(cache_key)
+            from_cache = False
+
             if cached:
-                result = None
-                answer = cached["answer"]
+                from_cache = True
+                final_answer = cached["answer"]
                 if cached.get("warnings"):
-                    answer += "\n\nWarnings: " + "; ".join(cached["warnings"])
-                answer_text.value = ""
-                for idx in range(1, len(answer) + 1, 6):
-                    answer_text.value = answer[:idx]
-                    page.update()
-                    await asyncio.sleep(0.012)
-                answer_text.value = answer + "\n\n(Cached response)"
+                    final_answer += "\nWarnings: " + "; ".join(cached["warnings"])
+                await typewriter_render(answer_text, final_answer)
                 explanation_text.value = cached["explanation"]
                 insight_text.value = cached["insight"]
-                if cached["sql_query"]:
-                    sql_text.value = f"SQL:\n{cached['sql_query']}"
-                    sql_text.visible = True
-                    sql_container.visible = True
                 history.add_message(
                     active_session_id,
                     role="assistant",
                     content="",
                     sql_query=cached["sql_query"],
-                    answer=answer + "\n\n(Cached response)",
+                    answer=final_answer,
                     explanation=cached["explanation"],
                     insight=cached["insight"],
                     intent=cached["intent"],
                 )
+                details_sql.value = cached["sql_query"] or "No SQL available."
+                details_meta.value = f"Intent: {cached['intent']}\nWarnings: {', '.join(cached.get('warnings', [])) or 'None'}"
+                details_cached.value = "Cached response"
             else:
                 result = await asyncio.to_thread(pipeline.run, question, active_cfg)
-
                 if result.error:
-                    answer_text.value = f"Error: {result.error}"
+                    await typewriter_render(answer_text, f"Error: {result.error}")
                     explanation_text.value = result.explanation
                     insight_text.value = result.insight
                     history.add_message(
@@ -348,146 +403,181 @@ def main(page: ft.Page) -> None:
                         insight=result.insight,
                         intent=result.intent,
                     )
+                    details_sql.value = result.sql_query or "No SQL available."
+                    details_meta.value = "Execution error"
+                    details_cached.value = ""
                 else:
-                    answer = result.answer
+                    final_answer = result.answer
                     if result.warnings:
-                        answer += "\n\nWarnings: " + "; ".join(result.warnings)
-                    answer_text.value = ""
-                    for idx in range(1, len(answer) + 1, 6):
-                        answer_text.value = answer[:idx]
-                        page.update()
-                        await asyncio.sleep(0.012)
-                    answer_text.value = answer
+                        final_answer += "\nWarnings: " + "; ".join(result.warnings)
+                    await typewriter_render(answer_text, final_answer)
                     explanation_text.value = result.explanation
-                    insight_text.value = f"{result.insight} Returned {len(result.rows)} row(s)."
-                    if result.sql_query:
-                        sql_text.value = f"SQL:\n{result.sql_query}"
-                        sql_text.visible = True
-                        sql_container.visible = True
+                    insight_text.value = result.insight
                     history.add_message(
                         active_session_id,
                         role="assistant",
                         content="",
                         sql_query=result.sql_query,
-                        answer=answer,
+                        answer=final_answer,
                         explanation=result.explanation,
-                        insight=f"{result.insight} Returned {len(result.rows)} row(s).",
+                        insight=result.insight,
                         intent=result.intent,
                     )
                     history.set_cached_response(
                         cache_key=cache_key,
-                        answer=answer,
+                        answer=final_answer,
                         sql_query=result.sql_query,
                         explanation=result.explanation,
-                        insight=f"{result.insight} Returned {len(result.rows)} row(s).",
+                        insight=result.insight,
                         intent=result.intent,
                         warnings=result.warnings,
                     )
+                    details_sql.value = result.sql_query or "No SQL available."
+                    details_meta.value = (
+                        f"Intent: {result.intent}\n"
+                        f"Rows: {len(result.rows)}\n"
+                        f"Warnings: {', '.join(result.warnings) or 'None'}\n"
+                        f"Supplementary queries: {len(result.supplementary_queries)}"
+                    )
+                    details_cached.value = ""
+
             latest_prompt = history.latest_user_prompt(active_session_id)
             if latest_prompt:
                 history.update_title(
                     active_session_id,
                     latest_prompt[:28] + ("..." if len(latest_prompt) > 28 else ""),
                 )
+
             render_sessions()
             render_starters()
             is_processing = False
             prompt.disabled = False
             send_btn.disabled = False
+            if not from_cache:
+                page.update()
             page.update()
 
+        page.run_task(animate_loader)
         page.run_task(run_pipeline_async)
+
+    def toggle_details(_: Any = None) -> None:
+        nonlocal details_visible
+        details_visible = not details_visible
+        details_panel.visible = details_visible
+        page.update()
+
+    def on_keyboard(event: ft.KeyboardEvent) -> None:
+        key = (event.key or "").lower()
+        if key == "n" and (getattr(event, "ctrl", False) or getattr(event, "meta", False)):
+            create_new_session()
+
+    settings_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Database Settings"),
+        content=ft.Column(
+            [host, ft.Row([port, user]), database, password, status],
+            tight=True,
+            spacing=10,
+        ),
+        actions=[
+            ft.TextButton("Close", on_click=close_settings),
+            ft.ElevatedButton("Test & Connect", on_click=on_connect),
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+    )
 
     send_btn.on_click = on_ask
     prompt.on_submit = on_ask
+    page.on_keyboard_event = on_keyboard
 
     render_sessions()
     render_chat()
 
     sidebar = ft.Container(
-        width=290,
-        padding=14,
-        border_radius=16,
-        bgcolor="#0C1230",
-        border=ft.border.all(1, "#1C2757"),
+        width=250,
+        padding=10,
+        border_radius=10,
+        bgcolor="#0C1530",
+        border=ft.border.all(1, "#1E2A52"),
         content=ft.Column(
             [
                 ft.Row(
                     [
-                        ft.Text("TalkWithDB", size=20, weight=ft.FontWeight.BOLD, color="#E8EBFF"),
-                        ft.Icon(ft.Icons.BOLT, color="#5A6BFF", size=18),
+                        ft.Text("TalkWithDB", size=16, weight=ft.FontWeight.BOLD, color="#EEF2FF"),
+                        ft.Icon(ft.Icons.SMART_TOY, size=16, color="#6F84FF"),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-                ft.TextField(
-                    hint_text="Search sessions",
-                    dense=True,
-                    border_radius=10,
-                    border_color="#25305F",
-                    bgcolor="#12193A",
                 ),
                 ft.ElevatedButton(
                     "New Chat",
                     on_click=create_new_session,
-                    style=ft.ButtonStyle(bgcolor="#3E53DF", color=ft.Colors.WHITE),
+                    style=ft.ButtonStyle(
+                        bgcolor="#253EBC",
+                        color=ft.Colors.WHITE,
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                    ),
                 ),
-                ft.Divider(color="#1A244D"),
-                ft.Text("Session History", size=12, color="#9EA7D5"),
+                ft.Divider(color="#1A2445"),
                 session_list,
-                ft.Divider(color="#1A244D"),
-                ft.Text("Connection", size=12, color="#9EA7D5"),
-                host,
-                ft.Row([port, user]),
-                database,
-                password,
-                ft.ElevatedButton("Test & Connect", on_click=on_connect),
-                status,
             ],
-            spacing=10,
+            spacing=8,
         ),
+    )
+
+    top_bar = ft.Row(
+        [
+            ft.Text("Database Assistant", size=20, weight=ft.FontWeight.BOLD, color="#F2F4FF"),
+            ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Text(f"Model: {pipeline.model}", size=11, color="#D4DDFF"),
+                        padding=ft.padding.symmetric(horizontal=10, vertical=6),
+                        border_radius=14,
+                        bgcolor="#172043",
+                    ),
+                    ft.IconButton(ft.Icons.SETTINGS, tooltip="Settings", on_click=open_settings),
+                    ft.IconButton(
+                        ft.Icons.CHEVRON_RIGHT if details_visible else ft.Icons.CHEVRON_LEFT,
+                        tooltip="Toggle details panel",
+                        on_click=toggle_details,
+                    ),
+                ]
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
 
     main_chat = ft.Container(
         expand=True,
-        padding=20,
-        border_radius=16,
-        bgcolor="#0B1027",
-        border=ft.border.all(1, "#1A244F"),
+        padding=12,
+        border_radius=10,
+        bgcolor="#0B1228",
+        border=ft.border.all(1, "#1E2B54"),
         content=ft.Column(
             [
-                ft.Row(
-                    [
-                        ft.Text("What’s on your mind today?", size=38, weight=ft.FontWeight.BOLD, color="#F2F4FF"),
-                        model_badge,
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-                ft.Text(
-                    "Ask your data in plain English. Outputs include answer, explanation, and insight.",
-                    color="#9DA5CF",
-                ),
-                ft.Container(content=starter_wrap, visible=True),
+                top_bar,
+                ft.Container(content=starter_wrap),
                 ft.Container(
                     expand=True,
-                    content=ft.Container(width=820, content=chat_feed),
+                    content=ft.Container(width=920, content=chat_feed),
                 ),
                 ft.Container(
-                    bgcolor="#121833",
-                    border_radius=16,
-                    border=ft.border.all(1, "#2A356C"),
-                    padding=10,
+                    bgcolor="#101936",
+                    border_radius=10,
+                    border=ft.border.all(1, "#2A3D75"),
+                    padding=8,
                     content=ft.Row([prompt, send_btn]),
                 ),
             ],
-            spacing=14,
+            spacing=8,
         ),
     )
 
     page.add(
         ft.Row(
-            controls=[sidebar, main_chat],
+            controls=[sidebar, main_chat, details_panel],
             expand=True,
-            spacing=14,
+            spacing=10,
         )
     )
 

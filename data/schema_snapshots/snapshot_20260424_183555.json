@@ -36,9 +36,9 @@
           "references_column": null
         }
       ],
-      "row_count": 250,
-      "checksum": "fba8d810804781c05fd3a77e89dc4591",
-      "last_updated": "2026-04-24T22:56:24.639346"
+      "row_count": 5,
+      "checksum": "841d629ce127a354ed5f080d608ff9ac",
+      "last_updated": "2026-04-24T18:35:55.558684"
     },
     {
       "name": "query_cache",
@@ -126,7 +126,7 @@
       ],
       "row_count": 5,
       "checksum": "4142900f4d1d1943984c0de8db55078f",
-      "last_updated": "2026-04-24T22:56:24.694310"
+      "last_updated": "2026-04-24T18:35:55.603204"
     },
     {
       "name": "tasks",
@@ -188,9 +188,9 @@
           "references_column": null
         }
       ],
-      "row_count": 12000,
-      "checksum": "6d723d6977eb16c1c688961b117a5012",
-      "last_updated": "2026-04-24T22:56:24.745407"
+      "row_count": 24,
+      "checksum": "3a99ef84b998538531d0331fdb1f7dd5",
+      "last_updated": "2026-04-24T18:35:55.639044"
     },
     {
       "name": "users",
@@ -228,11 +228,11 @@
           "references_column": null
         }
       ],
-      "row_count": 1200,
-      "checksum": "71fa5be39672f6100764b0dcf403cd20",
-      "last_updated": "2026-04-24T22:56:24.802391"
+      "row_count": 5,
+      "checksum": "79ca068f1abc3661caed7d80737702e8",
+      "last_updated": "2026-04-24T18:35:55.694278"
     }
   ],
-  "checksum": "0dc4668b06506b874d03f589aca9b536",
-  "created_at": "2026-04-24T22:56:24.802509"
+  "checksum": "698811fcc3ee9c735f6c3d71ed3681ff",
+  "created_at": "2026-04-24T18:35:55.694380"
 }

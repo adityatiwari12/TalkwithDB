@@ -15,6 +15,7 @@ Run Ollama server (keep it running):
 ```bash
 ollama serve
 ```
+if error arises in ollama use this:  $env:Path += ";C:\Users\ASUS\AppData\Local\Programs\Ollama"
 
 Pull required models (lightweight default model + embeddings):
 

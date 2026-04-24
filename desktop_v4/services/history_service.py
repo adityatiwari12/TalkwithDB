@@ -152,6 +152,13 @@ class HistoryService:
             ).fetchall()
         return [MessageRecord(*row) for row in rows]
 
+    def delete_session(self, session_id: str) -> None:
+        """Delete a chat session and all its messages."""
+        with self._connect() as conn:
+            conn.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
+            conn.execute("DELETE FROM sessions WHERE session_id = ?", (session_id,))
+            conn.commit()
+
     def ensure_default_session(self) -> str:
         sessions = self.list_sessions()
         if sessions:

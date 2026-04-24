@@ -35,6 +35,43 @@ DB_CONFIG = {
 }
 
 
+def get_public_tables(conn):
+    """Get existing public base tables."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        """)
+        return [row[0] for row in cur.fetchall()]
+
+
+def table_exists(conn, table_name):
+    """Check if a table exists in public schema."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = %s
+            )
+        """, (table_name,))
+        return cur.fetchone()[0]
+
+
+def get_table_columns(conn, table_name):
+    """Get column names for a table."""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = %s
+            ORDER BY ordinal_position
+        """, (table_name,))
+        return [row[0] for row in cur.fetchall()]
+
+
 def get_connection():
     """Get database connection."""
     if not HAS_PSYCOPG2:
@@ -81,10 +118,7 @@ def show_table_counts(conn):
     print("TABLE ROW COUNTS")
     print("="*60)
     
-    tables = [
-        'departments', 'users', 'projects', 'tasks', 
-        'comments', 'task_history', 'tags', 'task_tags'
-    ]
+    tables = get_public_tables(conn)
     
     data = []
     total = 0
@@ -107,20 +141,17 @@ def show_column_counts(conn):
     print("TABLE COLUMN COUNTS")
     print("="*60)
     
-    tables = [
-        'departments', 'users', 'projects', 'tasks', 
-        'comments', 'task_history', 'tags', 'task_tags'
-    ]
+    tables = get_public_tables(conn)
     
     data = []
     total = 0
     with conn.cursor() as cur:
         for table in tables:
-            cur.execute(f"""
-                SELECT COUNT(*) 
-                FROM information_schema.columns 
-                WHERE table_name = '{table}'
-            """)
+            cur.execute("""
+                SELECT COUNT(*)
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s
+            """, (table,))
             count = cur.fetchone()[0]
             total += count
             data.append([table, count])
@@ -173,29 +204,41 @@ def show_task_stats(conn):
     print("TASK STATISTICS")
     print("="*60)
     
+    if not table_exists(conn, "tasks"):
+        print("tasks table not found in current schema.")
+        return
+
+    task_columns = set(get_table_columns(conn, "tasks"))
+
     with conn.cursor() as cur:
         # Status distribution
-        cur.execute("""
-            SELECT status, COUNT(*) as count,
-                   ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM tasks), 1) as percentage
-            FROM tasks
-            GROUP BY status
-            ORDER BY count DESC
-        """)
-        status_data = cur.fetchall()
-        print("\nStatus Distribution:")
-        print(tabulate(status_data, headers=["Status", "Count", "%"], tablefmt="grid"))
-        
-        # Priority distribution
-        cur.execute("""
-            SELECT priority, COUNT(*) as count
-            FROM tasks
-            GROUP BY priority
-            ORDER BY count DESC
-        """)
-        priority_data = cur.fetchall()
-        print("\nPriority Distribution:")
-        print(tabulate(priority_data, headers=["Priority", "Count"], tablefmt="grid"))
+        if "status" in task_columns:
+            cur.execute("""
+                SELECT status, COUNT(*) as count,
+                       ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM tasks), 1) as percentage
+                FROM tasks
+                GROUP BY status
+                ORDER BY count DESC
+            """)
+            status_data = cur.fetchall()
+            print("\nStatus Distribution:")
+            print(tabulate(status_data, headers=["Status", "Count", "%"], tablefmt="grid"))
+        else:
+            print("\nStatus Distribution: column 'status' not found.")
+
+        # Priority distribution (optional)
+        if "priority" in task_columns:
+            cur.execute("""
+                SELECT priority, COUNT(*) as count
+                FROM tasks
+                GROUP BY priority
+                ORDER BY count DESC
+            """)
+            priority_data = cur.fetchall()
+            print("\nPriority Distribution:")
+            print(tabulate(priority_data, headers=["Priority", "Count"], tablefmt="grid"))
+        else:
+            print("\nPriority Distribution: column 'priority' not found.")
         
         # Assignment stats
         cur.execute("""
@@ -240,23 +283,41 @@ def show_project_summary(conn):
     print("PROJECT SUMMARY (Top 10 by tasks)")
     print("="*60)
     
+    if not table_exists(conn, "projects"):
+        print("projects table not found in current schema.")
+        return
+
+    project_columns = set(get_table_columns(conn, "projects"))
+    has_status = "status" in project_columns
+    has_priority = "priority" in project_columns
+
+    select_cols = ["p.id", "p.name"]
+    group_cols = ["p.id", "p.name"]
+    headers = ["ID", "Name"]
+    if has_status:
+        select_cols.append("p.status")
+        group_cols.append("p.status")
+        headers.append("Status")
+    if has_priority:
+        select_cols.append("p.priority")
+        group_cols.append("p.priority")
+        headers.append("Priority")
+    select_cols.append("COUNT(t.id) as task_count")
+    headers.append("Tasks")
+
     with conn.cursor() as cur:
-        cur.execute("""
-            SELECT 
-                p.id,
-                p.name,
-                p.status,
-                p.priority,
-                COUNT(t.id) as task_count
+        cur.execute(f"""
+            SELECT
+                {", ".join(select_cols)}
             FROM projects p
             LEFT JOIN tasks t ON p.id = t.project_id
-            GROUP BY p.id, p.name, p.status, p.priority
+            GROUP BY {", ".join(group_cols)}
             ORDER BY task_count DESC
             LIMIT 10
         """)
         rows = cur.fetchall()
-    
-    print(tabulate(rows, headers=["ID", "Name", "Status", "Priority", "Tasks"], tablefmt="grid"))
+
+    print(tabulate(rows, headers=headers, tablefmt="grid"))
 
 
 def show_department_stats(conn):
@@ -265,9 +326,13 @@ def show_department_stats(conn):
     print("DEPARTMENT STATISTICS")
     print("="*60)
     
+    if not table_exists(conn, "departments"):
+        print("departments table not found in current schema. Skipping department stats.")
+        return
+
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT 
+            SELECT
                 d.id,
                 d.name,
                 COUNT(DISTINCT u.id) as user_count,
@@ -280,7 +345,7 @@ def show_department_stats(conn):
             ORDER BY user_count DESC
         """)
         rows = cur.fetchall()
-    
+
     print(tabulate(rows, headers=["ID", "Name", "Users", "Projects", "Budget"], tablefmt="grid"))
 
 
@@ -347,6 +412,10 @@ def export_to_csv(conn, table, output_dir='./data/export'):
     
     output_file = Path(output_dir) / f"{table}.csv"
     
+    if not table_exists(conn, table):
+        print(f"✗ Table '{table}' not found.")
+        return
+
     with conn.cursor() as cur:
         cur.execute(f"SELECT * FROM {table}")
         rows = cur.fetchall()
