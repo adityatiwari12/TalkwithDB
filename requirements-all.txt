@@ -7,11 +7,13 @@ uvicorn[standard]>=0.24.0
 pydantic>=2.4.0
 websockets>=12.0
 streamlit>=1.28.0
+flet>=0.25.0
 plotly>=5.17.0
 pandas>=2.1.0
 requests>=2.31.0
 python-multipart>=0.0.6
 python-dotenv>=1.0.0
+keyring>=25.0.0
 
 # ========== Database ==========
 psycopg2-binary>=2.9.9
