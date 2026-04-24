@@ -18,8 +18,9 @@ class Config:
     
     # Ollama Configuration
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_LLM_MODEL: str = os.getenv("OLLAMA_LLM_MODEL", "llama3.2")
-    OLLAMA_EMBED_MODEL: str = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+    # Use lightweight defaults so local machines with limited RAM can run reliably.
+    OLLAMA_LLM_MODEL: str = os.getenv("OLLAMA_LLM_MODEL", "llama3.2:latest")
+    OLLAMA_EMBED_MODEL: str = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text:latest")
     
     # Legacy OpenAI Configuration (kept for compatibility)
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")

@@ -1,0 +1,37 @@
+# Fine-tuning dependencies for Text-to-SQL
+
+# Core training libraries
+torch>=2.1.0
+transformers>=4.36.0
+datasets>=2.14.0
+accelerate>=0.25.0
+
+# Unsloth for efficient fine-tuning (QLoRA)
+unsloth[cu121]>=2024.1.0
+unsloth-zoo
+
+# LoRA and PEFT
+peft>=0.7.0
+bitsandbytes>=0.41.0
+
+# Training utilities
+trl>=0.7.0
+huggingface-hub>=0.19.0
+safetensors>=0.4.0
+
+# Optional: Weights & Biases logging
+# wandb>=0.16.0
+
+# Optional: DeepSpeed for multi-GPU
+# deepspeed>=0.12.0
+
+# Optional: Flash Attention 2 (faster training)
+# flash-attn>=2.3.0
+
+# Dataset processing
+pandas>=2.1.0
+numpy>=1.24.0
+tqdm>=4.66.0
+
+# Model export
+# llama-cpp-python (for GGUF conversion, install manually)

@@ -1,0 +1,352 @@
+{
+  "project": {
+    "name": "TalkWithDB",
+    "description": "RAG-based Natural Language to SQL system using PostgreSQL and Ollama",
+    "version": "3.1",
+    "author": "Aditya Tiwari",
+    "repository": "https://github.com/adityatiwari12/TalkwithDB"
+  },
+  "architecture": {
+    "type": "layered",
+    "layers": [
+      {
+        "name": "Presentation",
+        "components": ["Streamlit UI (port 8502)"],
+        "technologies": ["streamlit", "plotly", "pandas"]
+      },
+      {
+        "name": "API Gateway",
+        "components": ["FastAPI (port 8001)", "WebSocket endpoint"],
+        "technologies": ["fastapi", "uvicorn", "websockets", "pydantic"]
+      },
+      {
+        "name": "RAG Intelligence",
+        "components": [
+          "QueryRewriter",
+          "HybridSearcher (BM25 + FAISS)",
+          "LLMReranker",
+          "ConversationMemory"
+        ],
+        "technologies": ["faiss-cpu", "rank-bm25", "numpy", "scikit-learn"]
+      },
+      {
+        "name": "SQL Generation",
+        "components": ["SQL Generator", "Result Formatter"],
+        "technologies": ["ollama", "gpt-oss:20b", "nomic-embed-text"]
+      },
+      {
+        "name": "Safety",
+        "components": ["SQL Validator", "Sanitizer"],
+        "technologies": ["regex patterns", "deny-list"]
+      },
+      {
+        "name": "Data",
+        "components": ["PostgreSQL (port 5432)"],
+        "technologies": ["psycopg2", "sqlalchemy"]
+      }
+    ]
+  },
+  "external_services": {
+    "ollama": {
+      "url": "http://localhost:11434",
+      "required_models": ["gpt-oss:20b", "nomic-embed-text"],
+      "purpose": "Local LLM inference for SQL generation and formatting"
+    },
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "chatdb",
+      "default_user": "postgres",
+      "default_password": "1234",
+      "purpose": "Target database for SQL queries"
+    }
+  },
+  "entry_points": {
+    "main_launcher": {
+      "file": "main.py",
+      "description": "Starts both API and UI concurrently",
+      "ports": [8001, 8502]
+    },
+    "v3_orchestrator": {
+      "file": "chat_v3.py",
+      "description": "Advanced orchestrator with CLI arguments",
+      "args": ["--api-only", "--ui-only", "--no-browser"]
+    },
+    "api_only": {
+      "file": "apps/api.py",
+      "description": "FastAPI backend only",
+      "port": 8001
+    },
+    "ui_only": {
+      "file": "apps/ui.py",
+      "description": "Streamlit UI only",
+      "port": 8502
+    },
+    "standalone": {
+      "file": "chat_sql/app.py",
+      "description": "Simple standalone Flask/FastAPI app",
+      "port": 5000
+    },
+    "training_standard": {
+      "file": "training/train_sql.py",
+      "description": "Fine-tuning for 24GB+ VRAM (RTX 4090, A100)",
+      "requirements": "24GB VRAM, unsloth, transformers"
+    },
+    "training_low_vram": {
+      "file": "training/train_sql_low_vram.py",
+      "description": "Fine-tuning for 8GB VRAM (RTX 3060 Ti, 4060, 3070)",
+      "requirements": "8GB VRAM, CPU offloading enabled"
+    },
+    "prepare_data": {
+      "file": "training/prepare_data.py",
+      "description": "Download and format Spider/BIRD datasets"
+    },
+    "export_model": {
+      "file": "training/export_to_ollama.py",
+      "description": "Export fine-tuned model to Ollama GGUF format"
+    }
+  },
+  "key_modules": {
+    "config": {
+      "path": "src/chat_sql/config.py",
+      "description": "Configuration management with environment variables",
+      "key_classes": ["Config"]
+    },
+    "db_connection": {
+      "path": "src/chat_sql/db/connection.py",
+      "description": "PostgreSQL connection handling"
+    },
+    "schema_loader": {
+      "path": "src/chat_sql/db/schema_loader.py",
+      "description": "Extracts schema from information_schema"
+    },
+    "sql_generator": {
+      "path": "src/chat_sql/llm/sql_generator.py",
+      "description": "Generates SQL using Ollama LLM"
+    },
+    "result_formatter": {
+      "path": "src/chat_sql/llm/result_formatter.py",
+      "description": "Formats SQL results to natural language"
+    },
+    "sql_validator": {
+      "path": "src/chat_sql/safety/sql_validator.py",
+      "description": "Validates SQL for safety (SELECT-only, deny-list)"
+    },
+    "advanced_rag": {
+      "path": "src/chat_sql/rag/advanced_rag.py",
+      "description": "RAG pipeline with hybrid search and re-ranking"
+    },
+    "optimized_pipeline": {
+      "path": "src/chat_sql/core/optimized_pipeline.py",
+      "description": "Main chat pipeline orchestration"
+    }
+  },
+  "dependencies": {
+    "core": [
+      "fastapi>=0.104.0",
+      "uvicorn[standard]>=0.24.0",
+      "pydantic>=2.4.0",
+      "psycopg2-binary>=2.9.9",
+      "sqlalchemy>=2.0.0"
+    ],
+    "rag_ml": [
+      "faiss-cpu>=1.7.4",
+      "numpy>=1.24.0",
+      "scikit-learn>=1.3.0",
+      "rank-bm25>=0.2.2"
+    ],
+    "llm": [
+      "ollama>=0.1.0",
+      "langchain>=0.0.325",
+      "langchain-community>=0.0.10"
+    ],
+    "ui": [
+      "streamlit>=1.28.0",
+      "plotly>=5.17.0",
+      "pandas>=2.1.0"
+    ],
+    "utilities": [
+      "requests>=2.31.0",
+      "python-dotenv>=1.0.0",
+      "websockets>=12.0"
+    ],
+    "optional": [
+      "redis>=5.0.0",
+      "celery>=5.3.0",
+      "prometheus-client>=0.18.0"
+    ],
+    "dev": [
+      "pytest>=7.4.0",
+      "pytest-asyncio>=0.21.0",
+      "pytest-cov>=4.1.0",
+      "black>=23.0.0",
+      "isort>=5.12.0",
+      "mypy>=1.5.0"
+    ]
+  },
+  "database_schema": {
+    "tables": [
+      {
+        "name": "users",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY"},
+          {"name": "name", "type": "VARCHAR(100)", "nullable": false},
+          {"name": "email", "type": "VARCHAR(100)", "unique": true, "nullable": false},
+          {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+        ]
+      },
+      {
+        "name": "projects",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY"},
+          {"name": "name", "type": "VARCHAR(100)", "nullable": false},
+          {"name": "description", "type": "TEXT"},
+          {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+        ]
+      },
+      {
+        "name": "tasks",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY"},
+          {"name": "title", "type": "VARCHAR(200)", "nullable": false},
+          {"name": "status", "type": "VARCHAR(20)", "default": "'pending'"},
+          {"name": "assigned_to", "type": "INTEGER", "fk": "users.id"},
+          {"name": "project_id", "type": "INTEGER", "fk": "projects.id"},
+          {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+          {"name": "due_date", "type": "DATE"}
+        ]
+      }
+    ],
+    "relationships": [
+      {"from": "tasks.assigned_to", "to": "users.id", "type": "many-to-one"},
+      {"from": "tasks.project_id", "to": "projects.id", "type": "many-to-one"}
+    ]
+  },
+  "safety": {
+    "forbidden_keywords": [
+      "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE",
+      "CREATE", "REPLACE", "GRANT", "REVOKE", "COMMIT", "ROLLBACK",
+      "EXECUTE", "CALL", "MERGE", "UNION", "INTERSECT", "EXCEPT"
+    ],
+    "max_rows": 200,
+    "timeout_seconds": 30,
+    "max_question_length": 500,
+    "validation_layers": [
+      "Prompt constraint (SELECT-only instruction)",
+      "Application validation (regex patterns, deny-list)",
+      "Database ACL (read-only user)"
+    ]
+  },
+  "api_endpoints": {
+    "rest": [
+      {"path": "/api/chat", "method": "POST", "description": "Main chat endpoint"},
+      {"path": "/api/schema", "method": "GET", "description": "Get database schema"},
+      {"path": "/api/sessions/{id}", "method": "GET", "description": "Get session info"},
+      {"path": "/api/health", "method": "GET", "description": "Health check"}
+    ],
+    "websocket": [
+      {"path": "/ws/chat", "description": "Real-time chat WebSocket"}
+    ]
+  },
+  "configuration": {
+    "env_file": ".env",
+    "template": "src/chat_sql/.env.example",
+    "required_vars": [
+      "OLLAMA_BASE_URL",
+      "OLLAMA_LLM_MODEL=gemma2:27b",
+      "POSTGRES_HOST",
+      "POSTGRES_DB",
+      "POSTGRES_USER",
+      "POSTGRES_PASSWORD"
+    ],
+    "optional_vars": [
+      "OPENAI_API_KEY",
+      "CHROMA_PERSIST_PATH",
+      "MAX_ROWS",
+      "TOP_K_RETRIEVAL"
+    ]
+  },
+  "commands": {
+    "install_deps": "pip install -r requirements-v3.txt",
+    "pull_models": "ollama pull llama3.2 && ollama pull nomic-embed-text",
+    "start_docker": "cd docker && docker-compose up -d",
+    "init_db": "python chat_sql/setup_database.py",
+    "start_all": "python main.py",
+    "start_api": "python chat_v3.py --api-only",
+    "start_ui": "python chat_v3.py --ui-only",
+    "run_tests": "pytest",
+    "run_tests_coverage": "pytest --cov=src --cov-report=html"
+  },
+  "fine_tuning": {
+    "method": "LoRA (Low-Rank Adaptation)",
+    "base_model": "gpt-oss:20b",
+    "model_size": "20B parameters",
+    "training_approach": {
+      "base_weights": "FROZEN - not updated during training",
+      "trainable_params": "LoRA adapters only (q_proj, v_proj, k_proj, o_proj, gate_proj, up_proj, down_proj)",
+      "typical_trainable_percentage": "0.5-2% of total parameters",
+      "memory_savings": "~90% reduction vs full fine-tuning"
+    },
+    "lora_configs": {
+      "standard": {
+        "r": 64,
+        "alpha": 128,
+        "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        "dropout": 0.0,
+        "hardware_required": "24GB+ VRAM"
+      },
+      "low_vram": {
+        "r": 16,
+        "alpha": 32,
+        "target_modules": ["q_proj", "v_proj"],
+        "dropout": 0.0,
+        "hardware_required": "8GB VRAM (RTX 3060 Ti, 4060, 3070)"
+      }
+    },
+    "datasets": {
+      "spider": {
+        "size": "10k+ queries, 200 databases",
+        "description": "Cross-domain text-to-SQL benchmark",
+        "difficulty": "Easy to Hard",
+        "best_for": "General SQL generation"
+      },
+      "bird": {
+        "size": "12k+ queries, 95 databases",
+        "description": "Complex queries with external knowledge",
+        "difficulty": "Medium to Very Hard",
+        "best_for": "Real-world complex SQL"
+      },
+      "bird_mini_dev": {
+        "size": "500 queries, 11 databases",
+        "description": "Lite version for quick testing",
+        "best_for": "Rapid experimentation"
+      }
+    },
+    "expected_accuracy": {
+      "base_model": {"spider": "45%", "bird": "35%"},
+      "after_spider_ft": {"spider": "65-70%", "bird": "50%"},
+      "after_bird_ft": {"spider": "60%", "bird": "55-60%"}
+    },
+    "hardware_support": {
+      "8gb_vram": {
+        "gpus": ["RTX 3060 Ti", "RTX 4060", "RTX 3070"],
+        "optimizations": ["CPU offloading", "gradient checkpointing", "8-bit optimizer", "batch_size=1"],
+        "training_time": "3-5 hours for 500 samples"
+      },
+      "24gb_vram": {
+        "gpus": ["RTX 4090", "RTX 3090", "A5000"],
+        "training_time": "2-4 hours for full dataset"
+      },
+      "40gb_vram": {
+        "gpus": ["A100 40GB"],
+        "training_time": "1-2 hours for full dataset"
+      }
+    }
+  },
+  "version_history": {
+    "v1": {"accuracy": "35%", "features": ["Basic NL-to-SQL", "No RAG"]},
+    "v2": {"accuracy": "55%", "features": ["FAISS RAG", "Basic retrieval"]},
+    "v3": {"accuracy": "65%", "features": ["Hybrid RAG (BM25+Vector)", "LLM re-ranking", "Conversation memory"]},
+    "v3_ft": {"accuracy": "72%", "features": ["v3 + LoRA fine-tuning on Spider/BIRD", "Frozen base + trained adapters"]}
+  }
+}

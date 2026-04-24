@@ -18,7 +18,7 @@ class Config:
     
     # Ollama Configuration
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_LLM_MODEL: str = os.getenv("OLLAMA_LLM_MODEL", "llama3.2")
+    OLLAMA_LLM_MODEL: str = os.getenv("OLLAMA_LLM_MODEL", "gpt-oss:20b")
     OLLAMA_EMBED_MODEL: str = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
     
     # Legacy OpenAI Configuration (kept for compatibility)

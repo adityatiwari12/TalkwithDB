@@ -79,9 +79,19 @@
         "updated_at": "2026-02-19T23:54:45.170403"
       },
       "checksum": "79ca068f1abc3661caed7d80737702e8"
+    },
+    "query_cache": {
+      "table_name": "query_cache",
+      "text": "Table: query_cache\nDescription: Table with 3 rows\nColumns:\n- cache_key (character varying) [PRIMARY KEY]\n- normalized_question (text)\n- max_tables (integer)\n- response (text)\n- sql_query (text)\n- results (jsonb)\n- metadata (jsonb)\n- hit_count (integer)\n- created_at (timestamp without time zone)\n- last_used_at (timestamp without time zone)\n",
+      "metadata": {
+        "table_name": "query_cache",
+        "document_type": "table_schema",
+        "updated_at": "2026-04-24T17:14:57.919070"
+      },
+      "checksum": "755616913e9dc711a8eccb5a6d3041cb"
     }
   },
   "dimension": 768,
-  "total_tables": 8,
-  "last_updated": "2026-02-19T23:54:45.171520"
+  "total_tables": 9,
+  "last_updated": "2026-04-24T17:14:57.927059"
 }

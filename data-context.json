@@ -1,0 +1,170 @@
+{
+  "database": {
+    "name": "chat_sql_db",
+    "type": "PostgreSQL",
+    "description": "Project management database with users, projects, and tasks",
+    "tables": {
+      "users": {
+        "description": "System users/employees",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY", "description": "Unique user identifier"},
+          {"name": "name", "type": "VARCHAR(100) NOT NULL", "description": "Full name of user"},
+          {"name": "email", "type": "VARCHAR(100) UNIQUE NOT NULL", "description": "Email address"},
+          {"name": "created_at", "type": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "description": "Account creation date"}
+        ],
+        "indexes": [],
+        "row_count": 1000,
+        "mock_data_generated": true
+      },
+      "projects": {
+        "description": "Company projects/initiatives",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY", "description": "Unique project identifier"},
+          {"name": "name", "type": "VARCHAR(100) NOT NULL", "description": "Project name"},
+          {"name": "description", "type": "TEXT", "description": "Project description"},
+          {"name": "created_at", "type": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "description": "Project creation date"}
+        ],
+        "indexes": [],
+        "row_count": 200,
+        "mock_data_generated": true
+      },
+      "tasks": {
+        "description": "Tasks assigned to users within projects",
+        "columns": [
+          {"name": "id", "type": "SERIAL PRIMARY KEY", "description": "Unique task identifier"},
+          {"name": "title", "type": "VARCHAR(200) NOT NULL", "description": "Task title/description"},
+          {"name": "status", "type": "VARCHAR(20) DEFAULT 'pending'", "description": "Current status: pending, in_progress, completed, blocked, cancelled"},
+          {"name": "assigned_to", "type": "INTEGER REFERENCES users(id)", "description": "User assigned to task"},
+          {"name": "project_id", "type": "INTEGER REFERENCES projects(id)", "description": "Project this task belongs to"},
+          {"name": "created_at", "type": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "description": "Task creation date"},
+          {"name": "due_date", "type": "DATE", "description": "Task deadline (optional)"}
+        ],
+        "indexes": [
+          "idx_tasks_assigned_to ON tasks(assigned_to)",
+          "idx_tasks_project_id ON tasks(project_id)",
+          "idx_tasks_status ON tasks(status)"
+        ],
+        "row_count": 5000,
+        "mock_data_generated": true
+      }
+    },
+    "relationships": [
+      {
+        "type": "many-to-one",
+        "from": "tasks.assigned_to",
+        "to": "users.id",
+        "description": "Many tasks can be assigned to one user"
+      },
+      {
+        "type": "many-to-one",
+        "from": "tasks.project_id",
+        "to": "projects.id",
+        "description": "Many tasks belong to one project"
+      },
+      {
+        "type": "indirect",
+        "from": "users",
+        "to": "projects",
+        "via": "tasks",
+        "description": "Users and projects are related through tasks"
+      }
+    ]
+  },
+  "mock_data": {
+    "generated": true,
+    "generation_script": "scripts/generate_mock_data.py",
+    "scale": {
+      "users": 1000,
+      "projects": 200,
+      "tasks": 5000
+    },
+    "statistics": {
+      "users": {
+        "total": 1000,
+        "unique_names": 100,
+        "unique_emails": 1000,
+        "date_range": "2023-04 to 2025-04"
+      },
+      "projects": {
+        "total": 200,
+        "unique_names": 64,
+        "with_descriptions": 200,
+        "date_range": "2024-04 to 2025-04"
+      },
+      "tasks": {
+        "total": 5000,
+        "status_distribution": {
+          "pending": 1500,
+          "in_progress": 1500,
+          "completed": 1250,
+          "blocked": 500,
+          "cancelled": 250
+        },
+        "assigned_percentage": 80,
+        "with_due_date": 80,
+        "date_range": "2024-10 to 2025-07"
+      }
+    },
+    "sample_queries": [
+      {
+        "natural_language": "How many users are in the system?",
+        "sql": "SELECT COUNT(*) FROM users;",
+        "expected_result": 1000
+      },
+      {
+        "natural_language": "List all pending tasks",
+        "sql": "SELECT * FROM tasks WHERE status = 'pending' LIMIT 10;",
+        "expected_count": 1500
+      },
+      {
+        "natural_language": "Which users have the most tasks assigned?",
+        "sql": "SELECT u.name, COUNT(t.id) as task_count FROM users u JOIN tasks t ON u.id = t.assigned_to GROUP BY u.id, u.name ORDER BY task_count DESC LIMIT 5;"
+      },
+      {
+        "natural_language": "Show me all tasks for the Website Redesign project",
+        "sql": "SELECT t.* FROM tasks t JOIN projects p ON t.project_id = p.id WHERE p.name = 'Website Redesign';"
+      },
+      {
+        "natural_language": "What projects have the most completed tasks?",
+        "sql": "SELECT p.name, COUNT(t.id) as completed_count FROM projects p JOIN tasks t ON p.id = t.project_id WHERE t.status = 'completed' GROUP BY p.id, p.name ORDER BY completed_count DESC LIMIT 5;"
+      },
+      {
+        "natural_language": "Find users with overdue tasks",
+        "sql": "SELECT DISTINCT u.name, u.email FROM users u JOIN tasks t ON u.id = t.assigned_to WHERE t.due_date < CURRENT_DATE AND t.status NOT IN ('completed', 'cancelled');"
+      }
+    ]
+  },
+  "common_query_patterns": {
+    "aggregation": [
+      "COUNT(*) for totals",
+      "GROUP BY with aggregation functions",
+      "ORDER BY for ranking"
+    ],
+    "joins": [
+      "INNER JOIN for tasks with users/projects",
+      "LEFT JOIN for all users including those without tasks",
+      "Multi-table joins for complex queries"
+    ],
+    "filtering": [
+      "WHERE status = 'pending'",
+      "WHERE due_date < CURRENT_DATE",
+      "WHERE name LIKE '%keyword%'"
+    ],
+    "date_operations": [
+      "CURRENT_DATE for today's date",
+      "Date comparisons for overdue tasks",
+      "Date ranges for created_at filters"
+    ]
+  },
+  "files": {
+    "mock_data_json": "data/mock/mock_data.json",
+    "mock_data_sql": "data/mock/mock_data.sql",
+    "generation_script": "scripts/generate_mock_data.py"
+  },
+  "commands": {
+    "generate_small": "python scripts/generate_mock_data.py --users 100 --projects 20 --tasks 500 --output-dir ./data/mock",
+    "generate_large": "python scripts/generate_mock_data.py --users 1000 --projects 200 --tasks 5000 --output-dir ./data/mock",
+    "generate_custom": "python scripts/generate_mock_data.py --users 500 --projects 100 --tasks 2500 --output-dir ./data/mock",
+    "load_to_db": "psql -d chatdb -f data/mock/mock_data.sql"
+  }
+}

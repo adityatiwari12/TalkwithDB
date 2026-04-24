@@ -19,6 +19,7 @@ class SQLGenerator:
         self.base_url = config.OLLAMA_BASE_URL
         self.model = config.OLLAMA_LLM_MODEL
         self._test_connection()
+        self._ensure_model_available()
     
     def _test_connection(self) -> None:
         """Test connection to Ollama server."""
@@ -29,6 +30,40 @@ class SQLGenerator:
             print(f"Connected to Ollama at {self.base_url}")
         except Exception as e:
             raise RuntimeError(f"Error connecting to Ollama: {e}")
+
+    def _list_available_models(self) -> list[str]:
+        """Return model names currently available in local Ollama."""
+        response = requests.get(f"{self.base_url}/api/tags", timeout=5)
+        response.raise_for_status()
+        payload = response.json()
+        models = payload.get("models", [])
+        return [m.get("name", "").strip() for m in models if m.get("name")]
+
+    def _ensure_model_available(self) -> None:
+        """
+        Validate configured model exists locally.
+        Falls back from '<name>:latest' to '<name>' when available.
+        """
+        try:
+            available_models = self._list_available_models()
+        except Exception as e:
+            raise RuntimeError(f"Unable to list Ollama models: {e}")
+
+        if self.model in available_models:
+            return
+
+        if self.model.endswith(":latest"):
+            bare_model = self.model.rsplit(":", 1)[0]
+            if bare_model in available_models:
+                self.model = bare_model
+                return
+
+        available_list = ", ".join(available_models) if available_models else "none"
+        raise RuntimeError(
+            "Configured Ollama model not found. "
+            f"Configured='{self.model}', available=[{available_list}]. "
+            f"Update OLLAMA_LLM_MODEL or pull the model with: ollama pull {self.model}"
+        )
     
     def generate_sql(self, question: str, schema_context: str) -> Dict[str, str]:
         """
@@ -64,6 +99,14 @@ class SQLGenerator:
             )
             
             if response.status_code != 200:
+                if response.status_code == 404 and "model" in response.text.lower():
+                    available_models = self._list_available_models()
+                    available_list = ", ".join(available_models) if available_models else "none"
+                    raise RuntimeError(
+                        "Ollama model not found during generation. "
+                        f"Configured='{self.model}', available=[{available_list}]. "
+                        f"Run: ollama pull {self.model} or set OLLAMA_LLM_MODEL to an installed model."
+                    )
                 raise RuntimeError(f"Ollama API error: {response.status_code} - {response.text}")
             
             result = response.json()

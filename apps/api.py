@@ -13,6 +13,10 @@ import uuid
 import logging
 from datetime import datetime
 import asyncio
+import hashlib
+from psycopg2.extras import Json, RealDictCursor
+from datetime import date
+from decimal import Decimal
 
 # Add src to path for absolute imports
 import sys
@@ -61,6 +65,130 @@ pipeline = OptimizedChatWithSQLPipeline()
 
 # Session management
 active_sessions: Dict[str, Dict[str, Any]] = {}
+
+
+def _normalize_query(text: str) -> str:
+    return " ".join(text.strip().lower().split())
+
+
+def _cache_key(question: str, max_tables: int) -> str:
+    normalized = _normalize_query(question)
+    return hashlib.sha256(f"{normalized}|{max_tables}".encode("utf-8")).hexdigest()
+
+
+def _ensure_query_cache_table() -> None:
+    with db_connection.get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS query_cache (
+                    cache_key VARCHAR(64) PRIMARY KEY,
+                    normalized_question TEXT NOT NULL,
+                    max_tables INTEGER NOT NULL,
+                    response TEXT NOT NULL,
+                    sql_query TEXT,
+                    results JSONB,
+                    metadata JSONB,
+                    hit_count INTEGER NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    last_used_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.commit()
+
+
+def _to_json_safe(value: Any) -> Any:
+    """Recursively convert values into JSON-serializable primitives."""
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {k: _to_json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_to_json_safe(v) for v in value]
+    if isinstance(value, tuple):
+        return [_to_json_safe(v) for v in value]
+    return value
+
+
+def _get_cached_chat_response(question: str, max_tables: int) -> Optional[Dict[str, Any]]:
+    key = _cache_key(question, max_tables)
+    with db_connection.get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                """
+                SELECT response, sql_query, results, metadata
+                FROM query_cache
+                WHERE cache_key = %s
+                """,
+                (key,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            cursor.execute(
+                """
+                UPDATE query_cache
+                SET hit_count = hit_count + 1, last_used_at = CURRENT_TIMESTAMP
+                WHERE cache_key = %s
+                """,
+                (key,),
+            )
+            conn.commit()
+            return dict(row)
+
+
+def _save_cached_chat_response(
+    question: str,
+    max_tables: int,
+    response_text: str,
+    sql_query: Optional[str],
+    results: List[Dict[str, Any]],
+    metadata: Dict[str, Any],
+) -> None:
+    key = _cache_key(question, max_tables)
+    normalized = _normalize_query(question)
+    safe_results = _to_json_safe(results)
+    safe_metadata = _to_json_safe(metadata)
+    with db_connection.get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO query_cache (
+                    cache_key, normalized_question, max_tables, response, sql_query, results, metadata, hit_count
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 0)
+                ON CONFLICT (cache_key)
+                DO UPDATE SET
+                    response = EXCLUDED.response,
+                    sql_query = EXCLUDED.sql_query,
+                    results = EXCLUDED.results,
+                    metadata = EXCLUDED.metadata,
+                    last_used_at = CURRENT_TIMESTAMP
+                """,
+                (
+                    key,
+                    normalized,
+                    max_tables,
+                    response_text,
+                    sql_query,
+                    Json(safe_results),
+                    Json(safe_metadata),
+                ),
+            )
+            conn.commit()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize DB cache table used for repeated query acceleration."""
+    try:
+        _ensure_query_cache_table()
+        logger.info("Query cache table is ready")
+    except Exception as e:
+        logger.error(f"Failed to initialize query cache table: {e}")
 
 
 # Pydantic Models
@@ -191,7 +319,20 @@ async def chat(request: ChatRequest):
                 metadata={"error": "AdvancedRAGPipeline not initialized"}
             )
         
-        # Step 1: Advanced RAG retrieval
+        # Step 1: Check DB-backed cache first
+        cached = _get_cached_chat_response(request.message, request.max_tables)
+        if cached:
+            cached_metadata = cached.get("metadata") or {}
+            cached_metadata["cache"] = {"hit": True}
+            return ChatResponse(
+                response=cached.get("response", ""),
+                sql_query=cached.get("sql_query"),
+                results=cached.get("results") or [],
+                session_id=session_id,
+                metadata=cached_metadata,
+            )
+
+        # Step 2: Advanced RAG retrieval
         logger.info(f"Processing chat message for session {session_id}: {request.message}")
         
         retrieval_result = advanced_rag.retrieve(
@@ -200,7 +341,7 @@ async def chat(request: ChatRequest):
             top_k=request.max_tables
         )
         
-        # Step 2: Generate SQL
+        # Step 3: Generate SQL
         sql_start = datetime.now()
         try:
             sql_result = sql_generator.generate_sql(
@@ -220,7 +361,7 @@ async def chat(request: ChatRequest):
             )
         sql_time = (datetime.now() - sql_start).total_seconds()
         
-        # Step 3: Validate SQL
+        # Step 4: Validate SQL
         validation_result = sql_validator.validate_sql(sql_query)
         
         if not validation_result.is_valid:
@@ -256,7 +397,7 @@ async def chat(request: ChatRequest):
             
             return response
         
-        # Step 4: Execute SQL
+        # Step 5: Execute SQL
         exec_start = datetime.now()
         try:
             results = db_connection.execute_query(sql_query)
@@ -268,7 +409,7 @@ async def chat(request: ChatRequest):
             exec_time = 0
             row_count = 0
         
-        # Step 5: Format response
+        # Step 6: Format response
         formatter = ResultFormatter()
         natural_response = formatter.format_result(
             question=request.message,
@@ -280,34 +421,48 @@ async def chat(request: ChatRequest):
         total_time = sql_time + exec_time
         
         # Build response
+        response_metadata = {
+            "retrieval": {
+                "original_query": retrieval_result['original_query'],
+                "rewritten_query": retrieval_result['rewritten_query'],
+                "expansion_terms": retrieval_result['expansion_terms'],
+                "intent": retrieval_result['intent'],
+                "retrieved_tables": retrieval_result['retrieved_tables'],
+                "search_results": retrieval_result['search_results']
+            },
+            "validation": {
+                "is_valid": True,
+                "warnings": validation_result.warnings
+            },
+            "execution": {
+                "row_count": row_count,
+                "execution_time": exec_time
+            },
+            "timing": {
+                "sql_generation": sql_time,
+                "query_execution": exec_time,
+                "total": total_time
+            },
+            "cache": {
+                "hit": False
+            }
+        }
         response = ChatResponse(
             response=natural_response,
             sql_query=sql_query,
             results=results[:20] if results else [],  # Limit results in response
             session_id=session_id,
-            metadata={
-                "retrieval": {
-                    "original_query": retrieval_result['original_query'],
-                    "rewritten_query": retrieval_result['rewritten_query'],
-                    "expansion_terms": retrieval_result['expansion_terms'],
-                    "intent": retrieval_result['intent'],
-                    "retrieved_tables": retrieval_result['retrieved_tables'],
-                    "search_results": retrieval_result['search_results']
-                },
-                "validation": {
-                    "is_valid": True,
-                    "warnings": validation_result.warnings
-                },
-                "execution": {
-                    "row_count": row_count,
-                    "execution_time": exec_time
-                },
-                "timing": {
-                    "sql_generation": sql_time,
-                    "query_execution": exec_time,
-                    "total": total_time
-                }
-            }
+            metadata=response_metadata
+        )
+
+        # Persist successful outputs for faster repeated retrieval.
+        _save_cached_chat_response(
+            question=request.message,
+            max_tables=request.max_tables,
+            response_text=natural_response,
+            sql_query=sql_query,
+            results=response.results or [],
+            metadata=response_metadata,
         )
         
         # Add to conversation memory

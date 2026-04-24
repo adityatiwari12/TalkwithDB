@@ -1,0 +1,103 @@
+{
+  "project": "TalkWithDB",
+  "version": "3.1",
+  "author": "Aditya Tiwari",
+  "purpose": "RAG-based NL-to-SQL chatbot for PostgreSQL with fine-tuning support",
+  "problem": "Non-technical users querying SQL without schema knowledge",
+  "rag_why": "Full schema in prompt fails due to token exhaustion and attention dilution",
+  "fine_tuning": {
+    "method": "LoRA (Low-Rank Adaptation)",
+    "base_model": "gpt-oss:20b",
+    "approach": "Freeze base weights, train only adapter layers (q_proj, v_proj, etc.)",
+    "trainable_params": "0.5-2% of total (90% memory savings)",
+    "datasets": ["Spider (10k queries)", "BIRD (12k queries)", "BIRD-Mini (500 queries)"],
+    "hardware": {
+      "8gb": ["RTX 3060 Ti", "RTX 4060", "RTX 3070"],
+      "24gb": ["RTX 4090", "RTX 3090"],
+      "40gb": ["A100"]
+    },
+    "accuracy_gain": "45% → 65-70% on Spider dataset"
+  },
+  "commands": {
+    "install_deps": "pip install -r requirements-v3.txt",
+    "pull_models": "ollama pull gpt-oss:20b && ollama pull nomic-embed-text",
+    "train_prepare": "cd training && python prepare_data.py --dataset spider --output ./data/spider.json",
+    "train_standard": "cd training && python train_sql.py --model_name gpt-oss:20b --dataset ./data/spider.json --output ./output",
+    "train_low_vram": "cd training && python train_sql_low_vram.py --model_name gpt-oss:20b --dataset ./data/spider.json --output ./output --max_samples 500",
+    "train_export": "cd training && python export_to_ollama.py --checkpoint ./output/final --name gpt-oss-20b-sql"
+  },
+  "tech_stack": {
+    "llm": "Ollama gpt-oss:20b 20B (port 11434)",
+    "embeddings": "nomic-embed-text",
+    "db": "PostgreSQL (port 5432)",
+    "backend": "FastAPI (port 8001)",
+    "frontend": "Streamlit (port 8502)",
+    "rag": "FAISS + BM25 hybrid",
+    "vector_store": "FAISS"
+  },
+  "database": {
+    "name": "chat_sql_db",
+    "tables": ["users", "projects", "tasks"],
+    "indexes": ["idx_tasks_assigned_to", "idx_tasks_project_id", "idx_tasks_status"]
+  },
+  "architecture_layers": [
+    "Entry/Orchestration: chat_v3.py",
+    "API Gateway: apps/api.py",
+    "RAG Intelligence: advanced_rag.py",
+    "SQL Generation: sql_generator.py",
+    "Validation: sql_validator.py",
+    "Execution: db/connection.py"
+  ],
+  "rag_pipeline": [
+    "QueryRewriter: abbreviation expansion, context injection",
+    "HybridSearcher: BM25 + FAISS (40/60 fusion)",
+    "LLMReranker: metadata scoring",
+    "ConversationMemory: session-keyed turn history"
+  ],
+  "safety": {
+    "layers": [
+      "Prompt: SELECT-only instruction",
+      "App: deny-list + regex patterns",
+      "DB: read-only user grants"
+    ],
+    "forbidden_keywords": ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "CREATE"],
+    "max_rows": 200,
+    "timeout": "30s"
+  },
+  "performance": {
+    "schema_retrieval": "2.1s",
+    "sql_generation": "25.9s",
+    "validation": "<1ms",
+    "db_execution": "0.2s",
+    "summarization": "15s",
+    "total_e2e": "~44s"
+  },
+  "versions": {
+    "v1": {"accuracy": "35%", "rag": "none"},
+    "v2": {"accuracy": "55%", "rag": "FAISS only"},
+    "v3": {"accuracy": "65%", "rag": "Hybrid BM25+FAISS + LLM reranking"},
+    "v3_ft": {"accuracy": "72%", "rag": "Hybrid + LoRA fine-tuning", "training": "Frozen base + trained adapters on Spider/BIRD"}
+  },
+  "key_files": {
+    "entry": "main.py",
+    "api": "apps/api.py",
+    "ui": "apps/ui.py",
+    "config": "src/chat_sql/config.py",
+    "rag": "src/chat_sql/rag/advanced_rag.py",
+    "sql_gen": "src/chat_sql/llm/sql_generator.py",
+    "validator": "src/chat_sql/safety/sql_validator.py",
+    "train_prepare": "training/prepare_data.py",
+    "train_standard": "training/train_sql.py",
+    "train_low_vram": "training/train_sql_low_vram.py",
+    "train_export": "training/export_to_ollama.py",
+    "train_readme": "training/README.md"
+  },
+  "env_vars": [
+    "OLLAMA_BASE_URL=http://localhost:11434",
+    "OLLAMA_LLM_MODEL=gpt-oss:20b",
+    "POSTGRES_HOST=localhost",
+    "POSTGRES_DB=chatdb",
+    "POSTGRES_USER=postgres",
+    "POSTGRES_PASSWORD=1234"
+  ]
+}
