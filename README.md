@@ -1,40 +1,78 @@
-# TalkWithDB – Scalable Chat-with-SQL using RAG
-## Assignment Report
+# TalkWithDB - Enterprise Desktop AI for Databases
 
-**Submission for**: OneClarity Internship Evaluation  
-**Project**: TalkWithDB – Natural Language Interface over PostgreSQL using Retrieval-Augmented Generation  
-**Author**: Aditya Tiwari  
-**Version at Submission**: 3.1  
-**Date**: February 2026
+TalkWithDB started as a simple way to ask databases questions in natural language. Over time, it became clear this was not just a demo workflow: business analysts needed faster ad-hoc insights, managers needed trusted summaries, and team leads needed reproducible answers without waiting on manual SQL every time.
+
+Today, TalkWithDB is a desktop-first product with a plug-and-play database architecture. You connect a database, ask in plain English, and get safe SQL-backed answers with context.
+
+## Who It Is For
+
+- Business analysts who need reliable answers quickly
+- Managers who want concise, explainable summaries
+- Engineering and product leads who need traceable SQL + metadata
+
+## What TalkWithDB Does
+
+- Converts natural language to SQL with schema-aware grounding
+- Validates generated SQL with read-only safety guardrails
+- Executes queries and returns explanatory answers
+- Uses multi-query reasoning for richer context:
+  - primary query
+  - supplementary count query
+  - optional diagnostic query for trend/comparison intents
+- Persists chat history and query cache locally for continuity
+
+## How It Is Built
+
+TalkWithDB combines a retrieval-augmented SQL generation pipeline with a desktop UX that feels conversational and operationally practical:
+
+- Desktop app: `desktop_v4/` (chat-first interface)
+- LLM services: SQL generation + result formatting
+- RAG components: schema retrieval and context building
+- Safety layer: SQL validator + sanitization
+- Persistence: local SQLite for sessions/cache
+
+Detailed desktop architecture and runtime context are documented in `desktop_v4/DESKTOP_CONTEXT.md`.
+
+## Thought Process Behind The Product
+
+The guiding idea was simple: users should trust answers, not just receive them.
+
+That led to three design principles:
+
+1. **Conversation first** - the interface should feel immediate and natural.
+2. **Safety first** - generated SQL must be validated before execution.
+3. **Explainability first** - answers should include enough context to support decisions.
+
+The result is a tool that aims to reduce the gap between business questions and data-backed decisions.
+
+## Installation and Setup
+
+1. Install dependencies:
+
+```bash
+pip install -r requirements-all.txt
+```
+
+2. Ensure Ollama is running and required models are available:
+
+```bash
+ollama pull llama3.2:latest
+ollama pull nomic-embed-text:latest
+```
+
+3. Start PostgreSQL (local or Docker), and ensure credentials are valid.
+
+4. Run the desktop app:
+
+```bash
+python -m desktop_v4.app
+```
+
+5. Open Settings/Details panel in the app, connect to DB, and start chatting.
 
 ---
 
-## Version 5 Update - Desktop Plug-and-Play Application
-
-TalkWithDB has now evolved beyond a localhost-only web chatbot into a desktop-first application with a plug-and-play database architecture.
-
-### What changed
-
-- Added a desktop client in `desktop_v4/` with a chat-first interface, session sidebar, and structured response cards.
-- Implemented persistent local chat history and query cache via SQLite for restart-safe continuity.
-- Added real-time conversational UX improvements:
-  - immediate user message rendering
-  - animated thinking state
-  - in-place assistant placeholder replacement
-  - typewriter-style final response reveal
-- Extended query intelligence with multi-query orchestration:
-  - primary SQL execution
-  - supplementary COUNT query for complete context
-  - optional third diagnostic query for trend/comparison intents (date spread or top-category distribution)
-
-### Plug-and-play DB architecture
-
-- Users can connect directly to a target PostgreSQL instance from the desktop UI.
-- The NL-to-SQL pipeline runs in-process with safety validation before execution.
-- Sessions, cache, and prior chats are preserved locally, while each app launch starts with a fresh new chat for a clean user experience.
-- Desktop implementation context is documented in `desktop_v4/DESKTOP_CONTEXT.md`.
-
----
+## Technical Deep Dive (Legacy Detailed Report)
 
 ## Table of Contents
 
