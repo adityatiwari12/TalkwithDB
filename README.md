@@ -21,6 +21,10 @@ Today, TalkWithDB is a desktop-first product with a plug-and-play database archi
   - optional diagnostic query for trend/comparison intents
 - Persists chat history and query cache locally for continuity
 
+### Desktop UI Snapshot
+
+![TalkWithDB Desktop UI](Screenshot%202026-04-24%20194645.png)
+
 ## How It Is Built
 
 TalkWithDB combines a retrieval-augmented SQL generation pipeline with a desktop UX that feels conversational and operationally practical:
