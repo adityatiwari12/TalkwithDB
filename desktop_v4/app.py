@@ -41,6 +41,7 @@ def main(page: ft.Page) -> None:
     is_processing = False
     active_request_id = 0
     details_visible = True
+    editing_message_id: Optional[int] = None
 
     # Right panel details state
     details_sql = ft.Text("", size=12, color="#C9D3FF", selectable=True)
@@ -78,6 +79,7 @@ def main(page: ft.Page) -> None:
             shape=ft.RoundedRectangleBorder(radius=10),
         ),
     )
+    input_hint = ft.Text("", size=11, color="#9FB0E8", visible=False)
 
     details_panel = ft.Container(
         width=340,
@@ -152,48 +154,150 @@ def main(page: ft.Page) -> None:
                 )
             )
 
-    def user_bubble(text: str) -> ft.Row:
+    def _assistant_full_text(item: Any) -> str:
+        parts = [item.answer or ""]
+        if (item.explanation or "").strip():
+            parts.append(item.explanation)
+        if (item.insight or "").strip():
+            parts.append(item.insight)
+        return "\n\n".join([p for p in parts if p.strip()])
+
+    def user_bubble(message_id: int, text: str) -> ft.Row:
+        edit_btn = ft.IconButton(
+            ft.Icons.EDIT_OUTLINED,
+            icon_size=14,
+            icon_color="#AFC0FF",
+            tooltip="Edit and re-run",
+            visible=False,
+            on_click=lambda _: on_edit_user_message(message_id, text),
+        )
+        action_wrap = ft.Container(content=edit_btn, alignment=ft.alignment.center_right)
+
+        def on_hover(e: ft.HoverEvent) -> None:
+            edit_btn.visible = e.data == "true"
+            action_wrap.update()
+
         return ft.Row(
             [
+                action_wrap,
                 ft.Container(
                     content=ft.Text(text, size=13, color=ft.Colors.WHITE),
                     bgcolor="#3E5AE0",
                     padding=10,
                     border_radius=10,
+                    on_hover=on_hover,
                 )
             ],
             alignment=ft.MainAxisAlignment.END,
         )
 
-    def assistant_message(answer: str, explanation: str, insight: str) -> ft.Container:
+    def assistant_message(
+        message_id: int,
+        answer: str,
+        explanation: str,
+        insight: str,
+        allow_regenerate: bool,
+    ) -> ft.Container:
         body = [ft.Text(answer, size=15, weight=ft.FontWeight.W_600, color="#EEF2FF")]
         if explanation.strip():
             body.append(ft.Text(explanation, size=12, color="#C7D0F5"))
         if insight.strip():
             body.append(ft.Text(insight, size=11, color="#8C9ACF"))
+
+        copied_text = ft.Text("Copied", size=10, color="#9FD7A8", visible=False)
+        copy_btn = ft.IconButton(
+            ft.Icons.CONTENT_COPY_OUTLINED,
+            icon_size=14,
+            icon_color="#AFC0FF",
+            tooltip="Copy response",
+            visible=False,
+            on_click=lambda _: on_copy_assistant_message(message_id, copied_text),
+        )
+        regen_btn = ft.IconButton(
+            ft.Icons.REPLAY_OUTLINED,
+            icon_size=14,
+            icon_color="#AFC0FF" if allow_regenerate else "#5C668B",
+            tooltip="Regenerate response" if allow_regenerate else "Only latest response can regenerate",
+            visible=False,
+            disabled=not allow_regenerate,
+            on_click=lambda _: on_regenerate_assistant(message_id),
+        )
+        actions = ft.Row([copy_btn, regen_btn, copied_text], spacing=2, alignment=ft.MainAxisAlignment.END)
+
+        def on_hover(e: ft.HoverEvent) -> None:
+            is_hover = e.data == "true"
+            copy_btn.visible = is_hover
+            regen_btn.visible = is_hover
+            if not is_hover:
+                copied_text.visible = False
+            actions.update()
+
         return ft.Container(
-            content=ft.Column(body, spacing=6),
+            content=ft.Column([actions, *body], spacing=6),
             padding=10,
             border_radius=10,
             bgcolor="#121B38",
             border=ft.border.all(1, "#23315E"),
             ink=True,
+            on_hover=on_hover,
         )
 
     def render_chat() -> None:
         chat_feed.controls.clear()
-        for item in history.get_messages(active_session_id):
+        messages = history.get_messages(active_session_id)
+        assistant_ids = [m.id for m in messages if m.role == "assistant"]
+        latest_assistant_id = assistant_ids[-1] if assistant_ids else None
+        for item in messages:
             if item.role == "user":
-                chat_feed.controls.append(user_bubble(item.content))
+                chat_feed.controls.append(user_bubble(item.id, item.content))
             else:
                 chat_feed.controls.append(
                     assistant_message(
+                        message_id=item.id,
                         answer=item.answer or "",
                         explanation=item.explanation or "",
                         insight=item.insight or "",
+                        allow_regenerate=item.id == latest_assistant_id,
                     )
                 )
         render_starters()
+
+    def on_copy_assistant_message(message_id: int, copied_label: ft.Text) -> None:
+        messages = history.get_messages(active_session_id)
+        msg = next((m for m in messages if m.id == message_id and m.role == "assistant"), None)
+        if not msg:
+            return
+        page.set_clipboard(_assistant_full_text(msg))
+        copied_label.visible = True
+        copied_label.update()
+        async def hide_copied() -> None:
+            await asyncio.sleep(1.0)
+            copied_label.visible = False
+            copied_label.update()
+        page.run_task(hide_copied)
+
+    def on_edit_user_message(message_id: int, content: str) -> None:
+        nonlocal editing_message_id
+        if is_processing:
+            return
+        editing_message_id = message_id
+        prompt.value = content
+        input_hint.value = "Editing previous question - submit to replace and re-run"
+        input_hint.visible = True
+        prompt.focus()
+        page.update()
+
+    def on_regenerate_assistant(message_id: int) -> None:
+        if is_processing:
+            return
+        prev_user = history.get_previous_user_message(active_session_id, message_id)
+        if not prev_user:
+            return
+        on_ask(
+            None,
+            question_override=prev_user.content,
+            regenerate_assistant_id=message_id,
+        )
 
     def render_sessions() -> None:
         session_list.controls.clear()
@@ -314,11 +418,16 @@ def main(page: ft.Page) -> None:
             await asyncio.sleep(0.01)
         text_control.value = text
 
-    def on_ask(_: Any = None) -> None:
+    def on_ask(
+        _: Any = None,
+        question_override: Optional[str] = None,
+        regenerate_assistant_id: Optional[int] = None,
+    ) -> None:
         nonlocal is_processing
         nonlocal active_request_id
+        nonlocal editing_message_id
 
-        if is_processing or not prompt.value.strip():
+        if is_processing:
             return
         if not active_cfg:
             status.value = "Connect database from Settings first."
@@ -326,11 +435,17 @@ def main(page: ft.Page) -> None:
             page.update()
             return
 
-        question = prompt.value.strip()
+        question = (question_override if question_override is not None else prompt.value).strip()
+        if not question:
+            return
+
+        is_regenerate = regenerate_assistant_id is not None
+        is_editing = editing_message_id is not None and not is_regenerate and question_override is None
+        target_assistant_id = regenerate_assistant_id
+
         prompt.value = ""
-        history.add_message(active_session_id, role="user", content=question)
-        chat_feed.controls.append(user_bubble(question))
-        starter_wrap.visible = False
+        if not is_regenerate:
+            input_hint.visible = False
 
         # Single unified assistant placeholder
         answer_text = ft.Text("Thinking.", size=15, weight=ft.FontWeight.W_600, color="#EEF2FF")
@@ -343,7 +458,32 @@ def main(page: ft.Page) -> None:
             bgcolor="#121B38",
             border=ft.border.all(1, "#23315E"),
         )
-        chat_feed.controls.append(assistant_block)
+
+        if is_regenerate and target_assistant_id is not None:
+            render_chat()
+            existing_messages = history.get_messages(active_session_id)
+            target_index = next(
+                (idx for idx, m in enumerate(existing_messages) if m.id == target_assistant_id and m.role == "assistant"),
+                None,
+            )
+            if target_index is None:
+                return
+            chat_feed.controls[target_index] = assistant_block
+        elif is_editing and editing_message_id is not None:
+            history.update_user_message(active_session_id, editing_message_id, question)
+            history.truncate_after_message(active_session_id, editing_message_id)
+            history.add_message(active_session_id, role="assistant", content="")
+            editing_message_id = None
+            render_chat()
+            if chat_feed.controls:
+                chat_feed.controls[-1] = assistant_block
+        else:
+            history.add_message(active_session_id, role="user", content=question)
+            history.add_message(active_session_id, role="assistant", content="")
+            render_chat()
+            if chat_feed.controls:
+                chat_feed.controls[-1] = assistant_block
+            starter_wrap.visible = False
 
         is_processing = True
         active_request_id += 1
@@ -365,6 +505,7 @@ def main(page: ft.Page) -> None:
             cache_key = _cache_key(question, active_cfg)
             cached = history.get_cached_response(cache_key)
             from_cache = False
+            result_payload: dict[str, Any] = {}
 
             if cached:
                 from_cache = True
@@ -374,16 +515,13 @@ def main(page: ft.Page) -> None:
                 await typewriter_render(answer_text, final_answer)
                 explanation_text.value = cached["explanation"]
                 insight_text.value = cached["insight"]
-                history.add_message(
-                    active_session_id,
-                    role="assistant",
-                    content="",
-                    sql_query=cached["sql_query"],
-                    answer=final_answer,
-                    explanation=cached["explanation"],
-                    insight=cached["insight"],
-                    intent=cached["intent"],
-                )
+                result_payload = {
+                    "sql_query": cached["sql_query"],
+                    "answer": final_answer,
+                    "explanation": cached["explanation"],
+                    "insight": cached["insight"],
+                    "intent": cached["intent"],
+                }
                 details_sql.value = cached["sql_query"] or "No SQL available."
                 details_meta.value = f"Intent: {cached['intent']}\nWarnings: {', '.join(cached.get('warnings', [])) or 'None'}"
                 details_cached.value = "Cached response"
@@ -393,16 +531,13 @@ def main(page: ft.Page) -> None:
                     await typewriter_render(answer_text, f"Error: {result.error}")
                     explanation_text.value = result.explanation
                     insight_text.value = result.insight
-                    history.add_message(
-                        active_session_id,
-                        role="assistant",
-                        content="",
-                        sql_query=result.sql_query,
-                        answer=f"Error: {result.error}",
-                        explanation=result.explanation,
-                        insight=result.insight,
-                        intent=result.intent,
-                    )
+                    result_payload = {
+                        "sql_query": result.sql_query,
+                        "answer": f"Error: {result.error}",
+                        "explanation": result.explanation,
+                        "insight": result.insight,
+                        "intent": result.intent,
+                    }
                     details_sql.value = result.sql_query or "No SQL available."
                     details_meta.value = "Execution error"
                     details_cached.value = ""
@@ -413,16 +548,13 @@ def main(page: ft.Page) -> None:
                     await typewriter_render(answer_text, final_answer)
                     explanation_text.value = result.explanation
                     insight_text.value = result.insight
-                    history.add_message(
-                        active_session_id,
-                        role="assistant",
-                        content="",
-                        sql_query=result.sql_query,
-                        answer=final_answer,
-                        explanation=result.explanation,
-                        insight=result.insight,
-                        intent=result.intent,
-                    )
+                    result_payload = {
+                        "sql_query": result.sql_query,
+                        "answer": final_answer,
+                        "explanation": result.explanation,
+                        "insight": result.insight,
+                        "intent": result.intent,
+                    }
                     history.set_cached_response(
                         cache_key=cache_key,
                         answer=final_answer,
@@ -441,6 +573,31 @@ def main(page: ft.Page) -> None:
                     )
                     details_cached.value = ""
 
+            if is_regenerate and target_assistant_id is not None:
+                history.update_assistant_message(
+                    session_id=active_session_id,
+                    message_id=target_assistant_id,
+                    sql_query=result_payload.get("sql_query", ""),
+                    answer=result_payload.get("answer", ""),
+                    explanation=result_payload.get("explanation", ""),
+                    insight=result_payload.get("insight", ""),
+                    intent=result_payload.get("intent", "general_query"),
+                )
+            else:
+                latest = history.get_messages(active_session_id)
+                if latest:
+                    last_message = latest[-1]
+                    if last_message.role == "assistant":
+                        history.update_assistant_message(
+                            session_id=active_session_id,
+                            message_id=last_message.id,
+                            sql_query=result_payload.get("sql_query", ""),
+                            answer=result_payload.get("answer", ""),
+                            explanation=result_payload.get("explanation", ""),
+                            insight=result_payload.get("insight", ""),
+                            intent=result_payload.get("intent", "general_query"),
+                        )
+
             latest_prompt = history.latest_user_prompt(active_session_id)
             if latest_prompt:
                 history.update_title(
@@ -453,6 +610,7 @@ def main(page: ft.Page) -> None:
             is_processing = False
             prompt.disabled = False
             send_btn.disabled = False
+            input_hint.visible = False
             if not from_cache:
                 page.update()
             page.update()
@@ -566,7 +724,13 @@ def main(page: ft.Page) -> None:
                     border_radius=10,
                     border=ft.border.all(1, "#2A3D75"),
                     padding=8,
-                    content=ft.Row([prompt, send_btn]),
+                    content=ft.Column(
+                        [
+                            input_hint,
+                            ft.Row([prompt, send_btn]),
+                        ],
+                        spacing=4,
+                    ),
                 ),
             ],
             spacing=8,

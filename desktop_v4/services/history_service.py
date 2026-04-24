@@ -24,6 +24,7 @@ class SessionRecord:
 
 @dataclass
 class MessageRecord:
+    id: int
     role: str
     content: str
     sql_query: str
@@ -143,7 +144,7 @@ class HistoryService:
         with self._connect() as conn:
             rows = conn.execute(
                 """
-                SELECT role, content, sql_query, answer, explanation, insight, intent, created_at
+                SELECT id, role, content, sql_query, answer, explanation, insight, intent, created_at
                 FROM messages
                 WHERE session_id = ?
                 ORDER BY id ASC
@@ -151,6 +152,86 @@ class HistoryService:
                 (session_id,),
             ).fetchall()
         return [MessageRecord(*row) for row in rows]
+
+    def update_user_message(self, session_id: str, message_id: int, content: str) -> None:
+        now = datetime.utcnow().isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE messages
+                SET content = ?, created_at = ?
+                WHERE id = ? AND session_id = ? AND role = 'user'
+                """,
+                (content, now, message_id, session_id),
+            )
+            conn.execute(
+                "UPDATE sessions SET updated_at = ? WHERE session_id = ?",
+                (now, session_id),
+            )
+            conn.commit()
+
+    def truncate_after_message(self, session_id: str, message_id: int) -> None:
+        now = datetime.utcnow().isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM messages WHERE session_id = ? AND id > ?",
+                (session_id, message_id),
+            )
+            conn.execute(
+                "UPDATE sessions SET updated_at = ? WHERE session_id = ?",
+                (now, session_id),
+            )
+            conn.commit()
+
+    def update_assistant_message(
+        self,
+        session_id: str,
+        message_id: int,
+        sql_query: str,
+        answer: str,
+        explanation: str,
+        insight: str,
+        intent: str,
+    ) -> None:
+        now = datetime.utcnow().isoformat()
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE messages
+                SET content = '',
+                    sql_query = ?,
+                    answer = ?,
+                    explanation = ?,
+                    insight = ?,
+                    intent = ?,
+                    created_at = ?
+                WHERE id = ? AND session_id = ? AND role = 'assistant'
+                """,
+                (sql_query, answer, explanation, insight, intent, now, message_id, session_id),
+            )
+            conn.execute(
+                "UPDATE sessions SET updated_at = ? WHERE session_id = ?",
+                (now, session_id),
+            )
+            conn.commit()
+
+    def get_previous_user_message(
+        self,
+        session_id: str,
+        before_message_id: int,
+    ) -> Optional[MessageRecord]:
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT id, role, content, sql_query, answer, explanation, insight, intent, created_at
+                FROM messages
+                WHERE session_id = ? AND role = 'user' AND id < ?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (session_id, before_message_id),
+            ).fetchone()
+        return MessageRecord(*row) if row else None
 
     def delete_session(self, session_id: str) -> None:
         """Delete a chat session and all its messages."""
