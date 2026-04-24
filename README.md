@@ -25,6 +25,10 @@ Today, TalkWithDB is a desktop-first product with a plug-and-play database archi
 
 ![TalkWithDB Desktop UI](Screenshot%202026-04-24%20194645.png)
 
+### Desktop Demo Recording
+
+[Watch the desktop demo recording](screen_recording.mp4)
+
 ## How It Is Built
 
 TalkWithDB combines a retrieval-augmented SQL generation pipeline with a desktop UX that feels conversational and operationally practical:
