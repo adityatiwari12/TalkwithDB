@@ -32,6 +32,7 @@ TalkWithDB has now evolved beyond a localhost-only web chatbot into a desktop-fi
 - Users can connect directly to a target PostgreSQL instance from the desktop UI.
 - The NL-to-SQL pipeline runs in-process with safety validation before execution.
 - Sessions, cache, and prior chats are preserved locally, while each app launch starts with a fresh new chat for a clean user experience.
+- Desktop implementation context is documented in `desktop_v4/DESKTOP_CONTEXT.md`.
 
 ---
 
