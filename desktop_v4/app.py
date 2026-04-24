@@ -42,6 +42,8 @@ def main(page: ft.Page) -> None:
     active_request_id = 0
     details_visible = True
     editing_message_id: Optional[int] = None
+    should_stick_to_bottom = True
+    scroll_threshold_px = 140
 
     # Right panel details state
     details_sql = ft.Text("", size=12, color="#C9D3FF", selectable=True)
@@ -57,7 +59,7 @@ def main(page: ft.Page) -> None:
     status = ft.Text("DB disconnected", color="#D4A52F", size=12)
 
     session_list = ft.Column(spacing=6, scroll=ft.ScrollMode.ALWAYS, expand=True)
-    chat_feed = ft.Column(spacing=10, scroll=ft.ScrollMode.ALWAYS, expand=True)
+    chat_feed = ft.Column(spacing=10, scroll=ft.ScrollMode.ALWAYS, expand=True, auto_scroll=False)
     starter_wrap = ft.Column(spacing=6, visible=True)
 
     prompt = ft.TextField(
@@ -168,14 +170,9 @@ def main(page: ft.Page) -> None:
             icon_size=14,
             icon_color="#AFC0FF",
             tooltip="Edit and re-run",
-            visible=False,
             on_click=lambda _: on_edit_user_message(message_id, text),
         )
-        action_wrap = ft.Container(content=edit_btn, alignment=ft.alignment.center_right)
-
-        def on_hover(e: ft.HoverEvent) -> None:
-            edit_btn.visible = e.data == "true"
-            action_wrap.update()
+        action_wrap = ft.Row([edit_btn], alignment=ft.MainAxisAlignment.END)
 
         return ft.Row(
             [
@@ -185,7 +182,6 @@ def main(page: ft.Page) -> None:
                     bgcolor="#3E5AE0",
                     padding=10,
                     border_radius=10,
-                    on_hover=on_hover,
                 )
             ],
             alignment=ft.MainAxisAlignment.END,
@@ -210,7 +206,6 @@ def main(page: ft.Page) -> None:
             icon_size=14,
             icon_color="#AFC0FF",
             tooltip="Copy response",
-            visible=False,
             on_click=lambda _: on_copy_assistant_message(message_id, copied_text),
         )
         regen_btn = ft.IconButton(
@@ -218,19 +213,10 @@ def main(page: ft.Page) -> None:
             icon_size=14,
             icon_color="#AFC0FF" if allow_regenerate else "#5C668B",
             tooltip="Regenerate response" if allow_regenerate else "Only latest response can regenerate",
-            visible=False,
             disabled=not allow_regenerate,
             on_click=lambda _: on_regenerate_assistant(message_id),
         )
         actions = ft.Row([copy_btn, regen_btn, copied_text], spacing=2, alignment=ft.MainAxisAlignment.END)
-
-        def on_hover(e: ft.HoverEvent) -> None:
-            is_hover = e.data == "true"
-            copy_btn.visible = is_hover
-            regen_btn.visible = is_hover
-            if not is_hover:
-                copied_text.visible = False
-            actions.update()
 
         return ft.Container(
             content=ft.Column([actions, *body], spacing=6),
@@ -239,7 +225,6 @@ def main(page: ft.Page) -> None:
             bgcolor="#121B38",
             border=ft.border.all(1, "#23315E"),
             ink=True,
-            on_hover=on_hover,
         )
 
     def render_chat() -> None:
@@ -261,20 +246,55 @@ def main(page: ft.Page) -> None:
                     )
                 )
         render_starters()
+        maybe_scroll_to_bottom(force=False)
+
+    def on_chat_scroll(event: ft.OnScrollEvent) -> None:
+        nonlocal should_stick_to_bottom
+        max_extent = float(getattr(event, "max_scroll_extent", 0.0) or 0.0)
+        pixels = float(getattr(event, "pixels", 0.0) or 0.0)
+        distance_from_bottom = max_extent - pixels
+        should_stick_to_bottom = distance_from_bottom <= scroll_threshold_px
+
+    def maybe_scroll_to_bottom(force: bool = False) -> None:
+        if not (force or should_stick_to_bottom):
+            return
+        try:
+            # offset=-1 scrolls to end in Flet scrollable controls.
+            chat_feed.scroll_to(offset=-1, duration=220)
+        except Exception:
+            pass
 
     def on_copy_assistant_message(message_id: int, copied_label: ft.Text) -> None:
         messages = history.get_messages(active_session_id)
         msg = next((m for m in messages if m.id == message_id and m.role == "assistant"), None)
         if not msg:
             return
-        page.set_clipboard(_assistant_full_text(msg))
-        copied_label.visible = True
-        copied_label.update()
-        async def hide_copied() -> None:
+        copied_value = _assistant_full_text(msg)
+
+        async def do_copy_and_feedback() -> None:
+            copied_ok = False
+            try:
+                # This build exposes async clipboard service.
+                await page.clipboard.set(copied_value)
+                copied_ok = True
+            except Exception:
+                try:
+                    # Fallback for builds exposing sync/alternate API.
+                    if hasattr(page, "set_clipboard"):
+                        page.set_clipboard(copied_value)
+                        copied_ok = True
+                except Exception:
+                    copied_ok = False
+
+            copied_label.value = "Copied" if copied_ok else "Copy failed"
+            copied_label.color = "#9FD7A8" if copied_ok else "#FF9C9C"
+            copied_label.visible = True
+            page.update()
             await asyncio.sleep(1.0)
             copied_label.visible = False
-            copied_label.update()
-        page.run_task(hide_copied)
+            page.update()
+
+        page.run_task(do_copy_and_feedback)
 
     def on_edit_user_message(message_id: int, content: str) -> None:
         nonlocal editing_message_id
@@ -415,8 +435,11 @@ def main(page: ft.Page) -> None:
         for idx in range(1, len(text) + 1, 7):
             text_control.value = text[:idx]
             page.update()
+            maybe_scroll_to_bottom(force=False)
             await asyncio.sleep(0.01)
         text_control.value = text
+        page.update()
+        maybe_scroll_to_bottom(force=False)
 
     def on_ask(
         _: Any = None,
@@ -491,6 +514,7 @@ def main(page: ft.Page) -> None:
         prompt.disabled = True
         send_btn.disabled = True
         page.update()
+        maybe_scroll_to_bottom(force=True)
 
         async def animate_loader() -> None:
             dots = 0
@@ -614,6 +638,7 @@ def main(page: ft.Page) -> None:
             if not from_cache:
                 page.update()
             page.update()
+            maybe_scroll_to_bottom(force=False)
 
         page.run_task(animate_loader)
         page.run_task(run_pipeline_async)
@@ -647,6 +672,7 @@ def main(page: ft.Page) -> None:
     send_btn.on_click = on_ask
     prompt.on_submit = on_ask
     page.on_keyboard_event = on_keyboard
+    chat_feed.on_scroll = on_chat_scroll
 
     render_sessions()
     render_chat()
