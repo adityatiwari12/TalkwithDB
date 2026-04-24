@@ -36,20 +36,21 @@ This avoids brittle localhost handoffs and enables a plug-and-play installer wor
 
 ### Milestone 2 - NL-to-SQL desktop flow
 
-- [ ] Create `DesktopQueryPipeline` that wraps:
+- [x] Create `DesktopQueryPipeline` that wraps:
   - schema retrieval
   - SQL generation
   - SQL validation
   - query execution
   - result formatting
-- [ ] Wire prompt submit to pipeline.
-- [ ] Show generated SQL, warnings, and results table in desktop UI.
+- [x] Wire prompt submit to pipeline.
+- [x] Show generated SQL and warnings with structured response cards (Answer/Explanation/Insight) in desktop UI.
 - [ ] Add cancellation and timeout controls.
 
 ### Milestone 3 - History and exports
 
-- [ ] Persist query history into local SQLite.
-- [ ] Add replay, favorites, and search.
+- [x] Persist query history into local SQLite.
+- [x] Add replay via sidebar session switching.
+- [ ] Add favorites and search.
 - [ ] Add CSV and Excel export.
 
 ### Milestone 4 - Multi-database support
@@ -107,10 +108,19 @@ desktop_v4/
   - `desktop_v4/app.py`
   - `desktop_v4/services/connection_service.py`
   - `desktop_v4/README.md`
+- Extended to chat-first desktop UX:
+  - sidebar session history + new chat flow
+  - centered conversation layout
+  - structured assistant cards (answer, explanation, insight)
+  - local SQLite history service (`desktop_v4/services/history_service.py`)
+  - intent-aware query pipeline (`desktop_v4/services/query_pipeline.py`)
+  - startup behavior now opens a fresh new session while preserving previous chats
+  - starter example queries are shown in empty/new sessions
+  - persistent desktop query cache added (SQLite-backed)
 
 ## Next immediate tasks
 
-1. Implement `schema_service.py` to introspect selected database and cache table metadata.
-2. Implement `query_pipeline.py` that reuses `src/chat_sql` generation and validation.
-3. Replace placeholder "Ask" behavior with real end-to-end NL-to-SQL execution.
-4. Add a desktop results grid and SQL panel.
+1. Add result export (CSV/Excel) from desktop responses.
+2. Add connection profiles with keyring-backed credential storage.
+3. Add cancellation button and explicit timeout controls.
+4. Add multi-database adapters (SQLite next, then MySQL/SQL Server).

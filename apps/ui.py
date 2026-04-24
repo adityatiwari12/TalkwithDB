@@ -2,6 +2,8 @@
 
 from datetime import datetime
 import os
+import re
+import time
 import uuid
 from typing import Any, Dict, List
 
@@ -201,6 +203,8 @@ def initialize_session_state() -> None:
         st.session_state.active_chat_id = first_chat_id
     if "processing" not in st.session_state:
         st.session_state.processing = False
+    if "animated_message_ids" not in st.session_state:
+        st.session_state.animated_message_ids = set()
 
 
 def active_chat() -> Dict[str, Any]:
@@ -349,34 +353,47 @@ def render_messages(chat: Dict[str, Any]) -> None:
         cols = st.columns(2)
         for idx, question in enumerate(STARTER_QUESTIONS):
             with cols[idx % 2]:
-                if st.button(question, key=f"starter_q_{idx}", use_container_width=True):
+                if st.button(
+                    question,
+                    key=f"starter_q_{idx}",
+                    use_container_width=True,
+                    disabled=st.session_state.processing,
+                ):
                     submit_user_prompt(chat, question)
                     st.rerun()
 
     for msg in chat["messages"]:
         with st.chat_message("user" if msg["role"] == "user" else "assistant"):
-            st.markdown(msg["content"], unsafe_allow_html=(msg["role"] == "assistant"))
+            if msg["role"] == "assistant" and msg.get("is_placeholder"):
+                placeholder = st.empty()
+                placeholder.markdown(
+                    """
+                    <div class="typing-indicator">
+                        <span>Thinking</span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                if (
+                    msg["role"] == "assistant"
+                    and msg.get("animate")
+                    and msg.get("message_id") not in st.session_state.animated_message_ids
+                ):
+                    _render_typewriter_assistant(msg)
+                else:
+                    st.markdown(msg["content"], unsafe_allow_html=(msg["role"] == "assistant"))
             if msg["role"] == "assistant" and msg.get("sql_query"):
                 with st.expander("View SQL", expanded=False):
                     st.code(msg["sql_query"], language="sql")
-
-    if st.session_state.processing:
-        st.markdown(
-            """
-            <div class="typing-indicator">
-                <span>Thinking</span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 def handle_user_input(chat: Dict[str, Any]) -> None:
-    prompt = st.chat_input("Ask about your database...")
+    prompt = st.chat_input("Ask about your database...", disabled=st.session_state.processing)
     if not prompt or st.session_state.processing:
         return
     submit_user_prompt(chat, prompt)
@@ -385,24 +402,58 @@ def handle_user_input(chat: Dict[str, Any]) -> None:
 
 def submit_user_prompt(chat: Dict[str, Any], prompt: str) -> None:
     chat["messages"].append({"role": "user", "content": prompt, "sql_query": None})
+    chat["messages"].append(
+        {
+            "role": "assistant",
+            "content": "Thinking...",
+            "sql_query": None,
+            "is_placeholder": True,
+            "message_id": str(uuid.uuid4()),
+        }
+    )
     st.session_state.processing = True
     update_chat_title(st.session_state.active_chat_id)
 
 
 def process_pending_turn(chat: Dict[str, Any]) -> None:
-    if st.session_state.processing and chat["messages"] and chat["messages"][-1]["role"] == "user":
-        user_message = chat["messages"][-1]["content"]
+    if (
+        st.session_state.processing
+        and len(chat["messages"]) >= 2
+        and chat["messages"][-2]["role"] == "user"
+        and chat["messages"][-1]["role"] == "assistant"
+        and chat["messages"][-1].get("is_placeholder")
+    ):
+        user_message = chat["messages"][-2]["content"]
         data = call_chat_api(user_message, chat["session_id"])
         assistant_text = format_assistant_response(data)
-        chat["messages"].append(
-            {
-                "role": "assistant",
-                "content": assistant_text,
-                "sql_query": data.get("sql_query"),
-            }
-        )
+        chat["messages"][-1] = {
+            "role": "assistant",
+            "content": assistant_text,
+            "sql_query": data.get("sql_query"),
+            "is_placeholder": False,
+            "animate": True,
+            "message_id": chat["messages"][-1].get("message_id", str(uuid.uuid4())),
+        }
         st.session_state.processing = False
         st.rerun()
+
+
+def _render_typewriter_assistant(msg: Dict[str, Any]) -> None:
+    """Render a lightweight typewriter effect, then show full formatted card."""
+    container = st.empty()
+    raw_html = msg.get("content", "")
+    text_preview = re.sub(r"<[^>]+>", "", raw_html)
+    text_preview = re.sub(r"\s+", " ", text_preview).strip()
+    if not text_preview:
+        container.markdown(raw_html, unsafe_allow_html=True)
+    else:
+        step = 8
+        for idx in range(step, len(text_preview) + step, step):
+            container.markdown(text_preview[:idx])
+            time.sleep(0.012)
+        container.markdown(raw_html, unsafe_allow_html=True)
+    if msg.get("message_id"):
+        st.session_state.animated_message_ids.add(msg["message_id"])
 
 
 def main() -> None:

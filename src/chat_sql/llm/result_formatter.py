@@ -94,19 +94,19 @@ class ResultFormatter:
         return """You are a helpful assistant that converts SQL query results into natural language answers.
 
 Your task:
-1. Analyze the SQL query results
-2. Convert the data into a clear, human-readable response
-3. Be concise but informative
-4. Use natural language, not technical terms
-5. If there are multiple results, summarize them appropriately
-6. If there's no data, say so clearly
+1. Analyze the SQL query results carefully.
+2. Convert the data into a clear, human-readable response.
+3. Be explanatory, not just brief.
+4. Use natural language, not technical jargon.
+5. If there are multiple results, summarize patterns and key takeaways.
+6. If there's no data, explain that clearly and suggest what to check next.
 
 Guidelines:
 - Use everyday language
 - Be specific about numbers and counts
 - Group related information
-- Keep responses under 2-3 sentences when possible
-- Answer directly based on the data provided"""
+- Prefer 1 short paragraph plus 1-3 concise bullet-style insights when useful
+- Always answer directly based only on the data provided"""
     
     def _get_user_prompt(self, question: str, sql_query: str, results: List[Dict[str, Any]]) -> str:
         """Get user prompt with question, SQL, and results."""

@@ -9,6 +9,32 @@
 
 ---
 
+## Version 5 Update - Desktop Plug-and-Play Application
+
+TalkWithDB has now evolved beyond a localhost-only web chatbot into a desktop-first application with a plug-and-play database architecture.
+
+### What changed
+
+- Added a desktop client in `desktop_v4/` with a chat-first interface, session sidebar, and structured response cards.
+- Implemented persistent local chat history and query cache via SQLite for restart-safe continuity.
+- Added real-time conversational UX improvements:
+  - immediate user message rendering
+  - animated thinking state
+  - in-place assistant placeholder replacement
+  - typewriter-style final response reveal
+- Extended query intelligence with multi-query orchestration:
+  - primary SQL execution
+  - supplementary COUNT query for complete context
+  - optional third diagnostic query for trend/comparison intents (date spread or top-category distribution)
+
+### Plug-and-play DB architecture
+
+- Users can connect directly to a target PostgreSQL instance from the desktop UI.
+- The NL-to-SQL pipeline runs in-process with safety validation before execution.
+- Sessions, cache, and prior chats are preserved locally, while each app launch starts with a fresh new chat for a clean user experience.
+
+---
+
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
