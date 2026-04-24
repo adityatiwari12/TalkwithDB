@@ -79,6 +79,8 @@ python -m desktop_v4.app
 
 5. Open Settings/Details panel in the app, connect to DB, and start chatting.
 
+For a full desktop-specific guide, see `desktop_v4/README.md`.
+
 ---
 
 ## Technical Deep Dive (Legacy Detailed Report)
