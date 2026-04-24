@@ -24,6 +24,7 @@ Today, TalkWithDB is a desktop-first product with a plug-and-play database archi
 ### Desktop UI Snapshot
 
 ![TalkWithDB Desktop UI](Screenshot%202026-04-24%20194645.png)
+![TalkWithDB Chat Interactions (Copy, Edit, Regenerate)](Screenshot%202026-04-24%20232606.png)
 
 ### Desktop Demo Recording
 
