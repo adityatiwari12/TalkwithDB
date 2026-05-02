@@ -63,7 +63,8 @@ strict_equality = true
 module = [
     "ollama.*",
     "faiss.*",
-    "psycopg2.*"
+    "psycopg2.*",
+    "pg8000.*",
 ]
 ignore_missing_imports = true
 
@@ -96,6 +97,7 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "pydantic>=2.4.0",
     "psycopg2-binary>=2.9.9",
+    "pg8000>=1.31.2",
     "numpy>=1.24.0",
     "faiss-cpu>=1.7.4",
     "requests>=2.31.0",

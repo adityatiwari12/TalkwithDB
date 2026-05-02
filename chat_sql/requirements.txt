@@ -5,6 +5,7 @@ pydantic==2.5.0
 
 # Database
 psycopg2-binary==2.9.9
+pg8000>=1.31.2
 SQLAlchemy==2.0.23
 
 # LLM and AI (Ollama)
