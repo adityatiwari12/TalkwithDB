@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Any, List
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except Exception as _psycopg2_import_error:  # pragma: no cover - environment specific
+    psycopg2 = None
+    RealDictCursor = None
+    _PSYCOPG2_IMPORT_ERROR = _psycopg2_import_error
+else:
+    _PSYCOPG2_IMPORT_ERROR = None
 
 from desktop_v4.services.connection_service import PostgresConnectionConfig
 
 
-def _fetch_table_names(conn: psycopg2.extensions.connection) -> List[str]:
+def _fetch_table_names(conn: Any) -> List[str]:
     query = """
     SELECT table_name
     FROM information_schema.tables
@@ -29,6 +36,13 @@ def build_schema_context(config: PostgresConnectionConfig, max_tables: int = 12)
 
     This keeps prompt size bounded for local model reliability.
     """
+    if psycopg2 is None:
+        raise RuntimeError(
+            "PostgreSQL driver unavailable. Windows policy blocked psycopg2 native DLLs. "
+            "Install/use a pure-Python driver (e.g., pg8000) or ask IT to allow psycopg2. "
+            f"Details: {_PSYCOPG2_IMPORT_ERROR}"
+        )
+
     conn = psycopg2.connect(
         host=config.host,
         port=config.port,

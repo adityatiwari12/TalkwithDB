@@ -75,13 +75,13 @@ docker run -d --name talkwithdb_postgres ^
   postgres:14-alpine
 ```
 
-3. If container already exists, just start it:
+1. If container already exists, just start it:
 
 ```bash
 docker start talkwithdb_postgres
 ```
 
-4. (Optional) Confirm container status:
+1. (Optional) Confirm container status:
 
 ```bash
 docker ps

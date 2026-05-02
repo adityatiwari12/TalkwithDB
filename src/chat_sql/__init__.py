@@ -16,10 +16,22 @@ __version__ = "1.0.0"
 __author__ = "Chat SQL Team"
 __description__ = "RAG-based Natural Language to SQL System"
 
-from .core.chat_with_sql import ChatWithSQLPipeline
-from .api.app import app
+__all__ = ["ChatWithSQLPipeline", "app"]
 
-__all__ = [
-    "ChatWithSQLPipeline",
-    "app"
-]
+
+def __getattr__(name: str):
+    """
+    Lazily import heavy modules to avoid side effects on package import.
+
+    Some runtime environments may block native DB drivers (e.g., psycopg2 DLL),
+    so importing core/api eagerly can fail even when those paths are unused.
+    """
+    if name == "ChatWithSQLPipeline":
+        from .core.chat_with_sql import ChatWithSQLPipeline
+
+        return ChatWithSQLPipeline
+    if name == "app":
+        from .api.app import app
+
+        return app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
